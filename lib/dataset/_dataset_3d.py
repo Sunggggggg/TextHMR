@@ -144,7 +144,7 @@ class Dataset3D(Dataset):
 
         ### Video caption -> Text embedding
         if self.use_text :
-            Video_DB_DIR = '/mnt/SKY/V_HMR/data/preprocessed_data/Video_caption/'
+            Video_DB_DIR = '/mnt/SKY/V_HMR/data/distill_bert/'
             if self.set == 'train':
                 if self.dataset_name == '3dpw':
                     caption_db_file = osp.join(Video_DB_DIR, f'{self.dataset_name}_{self.set}_caption.pt')
