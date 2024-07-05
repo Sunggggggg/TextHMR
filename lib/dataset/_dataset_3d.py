@@ -102,7 +102,7 @@ class Dataset3D(Dataset):
             img_name_len = len('000000.jpg')
             seqname, img = img_name.split('/')[-2], img_name.split('/')[-1][-img_name_len:]
         
-        inp_text = self.caption_db[seqname][img]['text_feat']
+        inp_text = self.caption_db[seqname][img]['distill_bert']
         return inp_text
 
     def load_db(self):
