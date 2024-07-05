@@ -40,6 +40,13 @@ def main(cfg):
     # ========= Dataloaders ========= #
     data_loaders = get_data_loaders(cfg)
 
+    train_2d_loader, train_3d_loader, valid_loader = data_loaders
+    train_3d_iter = iter(train_3d_loader)
+    
+
+
+
+
 
 
 if __name__ == '__main__':

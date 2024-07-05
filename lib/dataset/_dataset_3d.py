@@ -102,7 +102,11 @@ class Dataset3D(Dataset):
             img_name_len = len('000000.jpg')
             seqname, img = img_name.split('/')[-2], img_name.split('/')[-1][-img_name_len:]
         
-        inp_text = self.caption_db[seqname][img]['distill_bert']
+        inp_text = self.caption_db[seqname][img]['distill_bert'][0]
+        max_caption_len, caption_len = 36, inp_text.shape[0]
+
+        # padding
+        inp_text = torch.cat([inp_text] + [torch.zeros(inp_text[0:1]) for _ in range(max_caption_len-caption_len)], dim=0)
         return inp_text
 
     def load_db(self):
