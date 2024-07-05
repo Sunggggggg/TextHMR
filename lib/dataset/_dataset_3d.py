@@ -274,7 +274,7 @@ class Dataset3D(Dataset):
             target = {
                 'features': input,
                 'vitpose_j2d': inp_vitpose,
-                'text_emb' : inp_text,
+                'distill_bert' : inp_text,
                 'theta': torch.from_numpy(theta_tensor).float(), # camera, pose and shape
                 'kp_2d': torch.from_numpy(kp_2d_tensor).float(), # 2D keypoints transformed according to bbox cropping
                 'kp_3d': torch.from_numpy(kp_3d_tensor).float(), # 3D keypoints
