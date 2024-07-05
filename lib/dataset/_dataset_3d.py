@@ -107,6 +107,7 @@ class Dataset3D(Dataset):
 
         # padding
         inp_text = torch.cat([inp_text] + [torch.zeros(inp_text[0:1]) for _ in range(max_caption_len-caption_len)], dim=0)
+        print(inp_text.shape)
         return inp_text
 
     def load_db(self):
