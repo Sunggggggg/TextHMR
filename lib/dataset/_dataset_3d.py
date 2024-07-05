@@ -106,8 +106,7 @@ class Dataset3D(Dataset):
         max_caption_len, caption_len = 36, inp_text.shape[0]
 
         # padding
-        inp_text = torch.cat([inp_text] + [torch.zeros(inp_text[0:1]) for _ in range(max_caption_len-caption_len)], dim=0)
-        print(inp_text.shape)
+        inp_text = torch.cat([inp_text] + [torch.zeros(inp_text[0:1].shape) for _ in range(max_caption_len-caption_len)], dim=0)
         return inp_text
 
     def load_db(self):
@@ -279,7 +278,7 @@ class Dataset3D(Dataset):
             target = {
                 'features': input,
                 'vitpose_j2d': inp_vitpose,
-                'distill_bert' : inp_text,
+                'text_features' : inp_text,
                 'theta': torch.from_numpy(theta_tensor).float(), # camera, pose and shape
                 'kp_2d': torch.from_numpy(kp_2d_tensor).float(), # 2D keypoints transformed according to bbox cropping
                 'kp_3d': torch.from_numpy(kp_3d_tensor).float(), # 3D keypoints
