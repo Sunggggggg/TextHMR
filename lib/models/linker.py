@@ -36,22 +36,21 @@ class CrossAttention(nn.Module):
         x = self.proj_drop(x)
         return x
     
-class Block(nn.Module):
-    def __init__(self, dim, num_heads, mlp_hidden_dim, qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
+class CrossAttentionBlock(nn.Module):
+    def __init__(self, dim, num_kv, num_heads, mlp_hidden_dim, qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
                  drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
         super().__init__()
         self.normq = norm_layer(dim)
         self.normk = norm_layer(dim)
         self.normv = norm_layer(dim)
 
-        self.attn = CrossAttention(dim, dim, dim, num_heads=num_heads, qkv_bias=qkv_bias,
+        self.attn = CrossAttention(dim, dim, num_kv, num_heads=num_heads, qkv_bias=qkv_bias,
             qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(dim)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
     def forward(self, xq, xk, xv):
-
         xq = xq + self.drop_path(self.attn(self.normq(xq), self.normk(xk), self.normv(xv)))
         xq = xq + self.drop_path(self.mlp(self.norm2(xq)))
         return xq
@@ -59,34 +58,60 @@ class Block(nn.Module):
 class Linker(nn.Module) :
     def __init__(self, 
                  embed_dim,
+                 num_joints,
+                 num_words,
+                 num_heads=8,
+                 depth=3,
                  ) :
         super().__init__()
+        self.depth = depth
+
         self.joint_embedding = nn.Linear(3, embed_dim)
 
-        self.joint_pos_embedding = nn.Parameter(torch.randn(1, 19, embed_dim))
-        self.text_pos_embedding = nn.Parameter(torch.randn(1, 36, embed_dim))
+        self.joint_pos_embedding = nn.Parameter(torch.randn(1, num_joints, embed_dim))
+        self.text_pos_embedding = nn.Parameter(torch.randn(1, num_words, embed_dim))
 
-        self.joint_query_pos_embedding = nn.Parameter(torch.randn(1, 19, embed_dim))
-        self.text_query_pos_embedding = nn.Parameter(torch.randn(1, 36, embed_dim))
-        self.joint_key_pos_embedding = nn.Parameter(torch.randn(1, 19, embed_dim))
-        self.text_key_pos_embedding = nn.Parameter(torch.randn(1, 36, embed_dim))
+        self.joint_query_pos_embed = nn.Parameter(torch.randn(1, num_joints, embed_dim))
+        self.text_query_pos_embed = nn.Parameter(torch.randn(1, num_words, embed_dim))
+        self.joint_key_pos_embed = nn.Parameter(torch.randn(1, num_joints, embed_dim))
+        self.text_key_pos_embed = nn.Parameter(torch.randn(1, num_words, embed_dim))
 
-        self.motion2text = nn.ModuleList([
-            Block(
-                dim=embed_dim, num_heads=h, mlp_hidden_dim=mlp_hidden_dim, qkv_bias=qkv_bias, qk_scale=qk_scale,
-                drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[i], norm_layer=norm_layer)
-            for i in range(depth)])
+        self.motion2text_linker = nn.ModuleList([
+            CrossAttentionBlock(embed_dim, num_words, num_heads, embed_dim*4.)
+            for _ in range(depth)])
+        self.text2motion_linker = nn.ModuleList([
+            CrossAttentionBlock(embed_dim, num_joints, num_heads, embed_dim*4.)
+            for _ in range(depth)])
+
 
     def forward(self, pose3d, text_embed):
         """
         pose3d      : [B, J, 3]
         text_embed  : [B, N, dim]
+
+        return 
+        joint_guide     : [B, J, dim]
+        semantic_guide  : [B, N, dim]
         """
+        # Positional enmedding
         pose_feat = self.joint_embedding(pose3d)
+        pose_feat = pose_feat + self.joint_pos_embedding
+        text_feat = text_embed + self.text_pos_embedding
 
+        # Cross Atten.
+        joint_guide, semantic_guide = pose_feat, text_feat
+        
+        for i in range(self.depth):
+            joint_guide = self.motion2text_linker[i](joint_guide + self.joint_query_pos_embed,
+                                    text_feat + self.text_key_pos_embed, text_feat)
+            semantic_guide = self.text2motion_linker[i](semantic_guide + self.text_query_pos_embed, 
+                                    pose_feat + self.joint_key_pos_embed, pose_feat)
+        
+        pose_feat = pose_feat + joint_guide 
+        semantic_guide = text_feat + semantic_guide
+        
+        return joint_guide, semantic_guide
 
-        return
-
-def get_model():
-
-    return 
+def get_model(embed_dim=256, num_joints=19, num_words=36, num_heads=8, depth=3):
+    model = Linker(embed_dim=embed_dim, num_joints=num_joints, num_words=num_words, num_heads=num_heads, depth=depth)
+    return model

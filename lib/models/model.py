@@ -2,9 +2,10 @@ import os
 import torch
 import torch.nn as nn
 
-import lifter
-import temporal_encoder
-import text_encoder
+import lib.models.lifter as lifter
+import lib.models.temporal_encoder as temporal_encoder
+import lib.models.text_encoder as text_encoder
+import lib.models.linker as linker
 
 class Model(nn.Module):
     def __init__(self, 
@@ -18,6 +19,7 @@ class Model(nn.Module):
         self.pose_lifter = lifter.get_model(num_joint, embed_dim, depth, lifter_pretrained)
         self.init_hmr = temporal_encoder.get_model(depth=depth, length=seqlen, embed_dim=embed_dim)
         self.text_encoder = text_encoder.get_model(length=36)
+        self.linking = linker.get_model()
 
     def add_joint(self, pose2d):
         pelvis = pose2d[:,:,[11,12],:2].mean(dim=2, keepdim=True)
@@ -31,12 +33,10 @@ class Model(nn.Module):
         """
         # First stage
         pose3d = self.pose_lifter(pose2d, img_feat)
-        init_theta = self.init_hmr(img_feat, is_train, J_regressor)
+        init_theta = self.init_hmr(img_feat, is_train, J_regressor) 
         text_embed = self.text_encoder(input_text)
 
         # Second stage
+        joint_guide, semantic_guide = self.linking(pose3d, text_embed)
         
-        
-        
-
         return pose3d, init_theta

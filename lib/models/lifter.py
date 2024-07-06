@@ -8,7 +8,7 @@ from functools import partial
 from timm.models.layers import DropPath
 from timm.models.vision_transformer import Mlp, Attention
 
-def load_checkpoint(load_dir, epoch=0, pick_best=False):
+def load_checkpoint(load_dir):
     try:
         print(f"Fetch model weight from {load_dir}")
         checkpoint = torch.load(load_dir, map_location='cuda')
