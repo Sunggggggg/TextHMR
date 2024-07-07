@@ -159,8 +159,8 @@ class Loss(nn.Module):
 
         pred_j3d = generator_outputs[sample_2d_count:]
 
-        pred_j3d = reduce(pred_j3d)
         pred_j3d = pred_j3d[w_3d]
+        pred_j3d = reduce(pred_j3d)
         real_3d = real_3d[w_3d]
         loss_kp_3d = self.keypoint_3d_loss(pred_j3d, real_3d)
 
