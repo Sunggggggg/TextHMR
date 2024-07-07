@@ -84,7 +84,7 @@ class Loss(nn.Module):
 
         # 3D Lifting loss
         lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1]
-        loss_lift_3d = self.keypoint_3d_loss(generator_outputs_lift_3d, lift_3d)
+        loss_lift_3d = self.cal_lift_loss(generator_outputs_lift_3d, lift_3d)
 
         loss_dict['loss_kp_3d_lift'] = loss_lift_3d
 
@@ -93,7 +93,7 @@ class Loss(nn.Module):
             init_theta = generator_outputs_init[-1]
             kp_3d = init_theta['kp_3d'] # [BT, 49, 3] T=1
             coco_kp3d = add_joint(convert_kps(kp_3d, src='spin', dst='coco'))  # [B, 19, 3]
-            joint_regular = self.keypoint_3d_loss(coco_kp3d, joint_guide)
+            joint_regular = self.keypoint_3d_loss(coco_kp3d, joint_guide) * 30.
 
             loss_dict['joint_regular'] = joint_regular
 
@@ -105,9 +105,7 @@ class Loss(nn.Module):
             'loss_kp_2d_init' : loss_kp_2d_init,
             'loss_kp_3d_init' : loss_kp_3d_init, 
             'loss_accel_2d_init': loss_accel_2d_init, 
-            'loss_accel_3d_init': loss_accel_3d_init, 
-            'loss_pose_init': loss_pose_init, 
-            'loss_shape_init': loss_shape_init,
+            'loss_accel_3d_init': loss_accel_3d_init
         }
 
         if loss_pose_init is not None:
@@ -124,9 +122,7 @@ class Loss(nn.Module):
                 'loss_kp_2d_inter' : loss_kp_2d_inter,
                 'loss_kp_3d_inter' : loss_kp_3d_inter, 
                 'loss_accel_2d_inter': loss_accel_2d_inter, 
-                'loss_accel_3d_inter': loss_accel_3d_inter, 
-                'loss_pose_inter': loss_pose_inter, 
-                'loss_shape_inter': loss_shape_inter
+                'loss_accel_3d_inter': loss_accel_3d_inter
             }
 
             if loss_pose_inter is not None:
@@ -143,9 +139,7 @@ class Loss(nn.Module):
                 'loss_kp_2d_final' : loss_kp_2d_final,
                 'loss_kp_3d_final' : loss_kp_3d_final, 
                 'loss_accel_2d_final': loss_accel_2d_final, 
-                'loss_accel_3d_final': loss_accel_3d_final, 
-                'loss_pose_final': loss_pose_final, 
-                'loss_shape_final': loss_shape_final
+                'loss_accel_3d_final': loss_accel_3d_final
             }
 
             if loss_pose_final is not None:

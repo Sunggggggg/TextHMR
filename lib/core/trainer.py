@@ -101,8 +101,13 @@ class Trainer():
         # Single epoch training routine
 
         losses = AverageMeter()
-        kp_2d_loss_local = AverageMeter()
-        kp_3d_loss_local = AverageMeter()
+        kp_2d_loss = AverageMeter()
+        kp_3d_loss = AverageMeter()
+        kp_2d_accel_loss = AverageMeter()
+        kp_3d_accel_loss = AverageMeter()
+        # 
+        kp_3d_lift_loss = AverageMeter()
+        kp_3d_regular = AverageMeter()
 
         timer = {
             'data': 0,
@@ -163,9 +168,11 @@ class Trainer():
             start = time.time()
 
             gen_loss, loss_dict = self.criterion(
-                generator_outputs=smpl_output,
+                generator_outputs_init=smpl_output,
+                generator_outputs_lift_3d=pose3d,
                 data_2d=target_2d,
-                data_3d=target_3d
+                data_3d=target_3d,
+                joint_guide=joint_guide,
             )
 
             timer['loss'] = time.time() - start
@@ -182,16 +189,23 @@ class Trainer():
             losses.update(total_loss.item(), input_feat.size(0))
 
             # 3D/2D keypoint loss
-            kp_2d_loss_local.update(loss_dict['loss_kp_2d_local'].item(), input_feat.size(0))
-            kp_3d_loss_local.update(loss_dict['loss_kp_3d_local'].item(), input_feat.size(0))
+            kp_2d_loss.update(loss_dict['loss_kp_2d_init'].item(), input_feat.size(0))
+            kp_3d_loss.update(loss_dict['loss_kp_3d_init'].item(), input_feat.size(0))
 
+            kp_2d_accel_loss.update(loss_dict['loss_accel_2d_init'].item(), input_feat.size(0))
+            kp_3d_accel_loss.update(loss_dict['loss_accel_3d_init'].item(), input_feat.size(0))
+
+            kp_3d_lift_loss.update(loss_dict['loss_kp_3d_lift'].item(), input_feat.size(0))
+            kp_3d_regular.update(loss_dict['joint_regular'].item(), input_feat.size(0))
 
             timer['backward'] = time.time() - start
             timer['batch'] = timer['data'] + timer['forward'] + timer['loss'] + timer['backward']
             start = time.time()
 
             summary_string = f'({i + 1}/{self.num_iters_per_epoch}) | Total: {bar.elapsed_td} | ETA: {bar.eta_td:} | loss: {losses.avg:.2f} ' \
-                             f'| 2d: {kp_2d_loss_local.avg:.2f} | 3d: {kp_3d_loss_local.avg:.2f} ' 
+                             f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f} ' \
+                             f'| kp_2d_accel_loss: {kp_2d_accel_loss.avg:.2f} | kp_3d_accel_loss: {kp_3d_accel_loss.avg:.2f} ' \
+                             f'| lift_loss: {kp_3d_lift_loss.avg:.2f} | regular_term: {kp_3d_regular.avg:.2f} '
             
             for k,v in timer.items():
                 summary_string += f' | {k}: {v:.2f}'
@@ -229,7 +243,7 @@ class Trainer():
                 input_feat = target['features'].cuda()
                 input_pose = target['vitpose_j2d'].cuda()
 
-                smpl_output = self.generator(input_feat, input_pose, is_train=False, J_regressor=J_regressor)
+                pose3d, smpl_output, joint_guide = self.generator(input_feat, input_pose, is_train=False, J_regressor=J_regressor)
             
                 # convert to 14 keypoint format for evaluation
                 n_kp = smpl_output[-1]['kp_3d'].shape[-2]

@@ -28,6 +28,8 @@ class Model(nn.Module):
         """
         input_text : [B, 36, 768]
         """
+        B = input_text.shape[0]
+
         pose2d = add_joint(pose2d[..., :2])
         # First stage
         pose3d = self.pose_lifter(pose2d, img_feat)
@@ -36,5 +38,12 @@ class Model(nn.Module):
 
         # Second stage
         joint_guide, semantic_guide = self.linking(pose3d, text_embed)
-        
+
+        for s in init_theta:
+            s['theta'] = s['theta'].reshape(B, -1)
+            s['verts'] = s['verts'].reshape(B, -1, 3)
+            s['kp_2d'] = s['kp_2d'].reshape(B, -1, 2)
+            s['kp_3d'] = s['kp_3d'].reshape(B, -1, 3)
+            s['rotmat'] = s['rotmat'].reshape(B, -1, 3, 3)
+
         return pose3d, init_theta, joint_guide
