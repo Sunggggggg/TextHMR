@@ -84,11 +84,7 @@ class Loss(nn.Module):
 
         # 3D Lifting loss
         # generator_outputs_lift_3d : [B, 19, 3]
-        lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1]
-        pelvis = lift_3d[:,:,[11,12]].mean(dim=2, keepdim=True)
-        neck = lift_3d[:,:,[5,6]].mean(dim=2, keepdim=True)
-        lift_3d = torch.cat([lift_3d, pelvis, neck], dim=2)
-        
+        lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1] # [B, 1, 19, 3]
         loss_lift_3d = self.cal_lift_loss(sample_2d_count, lift_3d, w_3d, reduce, flatten, generator_outputs_lift_3d)
 
         loss_dict['loss_kp_3d_lift'] = loss_lift_3d
@@ -158,11 +154,16 @@ class Loss(nn.Module):
         return gen_loss, loss_dict
 
     def cal_lift_loss(self, sample_2d_count, real_3d, w_3d, reduce, flatten, generator_outputs):
+        """
+        real_3d : [B, 1, 19, 3]
+        generator_outputs : [B, 19, 3]
+        """
         w_3d = flatten(w_3d)
 
         pred_j3d = generator_outputs[sample_2d_count:]  # [B, 19, 3]
 
         pred_j3d = pred_j3d[w_3d]                       # [B, 19, 3]
+        real_3d = reduce(real_3d)
         real_3d = real_3d[w_3d]                         # [B, 19, 3]
         loss_kp_3d = self.coco_keypoint_3d_loss(pred_j3d, real_3d)
 
