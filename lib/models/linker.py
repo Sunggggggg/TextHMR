@@ -82,6 +82,12 @@ class Linker(nn.Module) :
         self.text2motion_linker = nn.ModuleList([
             CrossAttentionBlock(embed_dim, num_joints, num_heads, embed_dim*4.)
             for _ in range(depth)])
+        
+        self.joint_head = nn.Sequential(
+            nn.LayerNorm(embed_dim), 
+            nn.Linear(embed_dim, 3)
+        )
+        self.text_head = nn.LayerNorm(embed_dim)
 
 
     def forward(self, pose3d, text_embed):
@@ -90,7 +96,7 @@ class Linker(nn.Module) :
         text_embed  : [B, N, dim]
 
         return 
-        joint_guide     : [B, J, dim]
+        joint_guide     : [B, J, 3]
         semantic_guide  : [B, N, dim]
         """
         # Positional enmedding
@@ -107,8 +113,8 @@ class Linker(nn.Module) :
             semantic_guide = self.text2motion_linker[i](semantic_guide + self.text_query_pos_embed, 
                                     pose_feat + self.joint_key_pos_embed, pose_feat)
         
-        pose_feat = pose_feat + joint_guide 
-        semantic_guide = text_feat + semantic_guide
+        pose_feat = pose3d + self.joint_head(joint_guide)
+        semantic_guide = self.text_head(text_feat + semantic_guide)
         
         return joint_guide, semantic_guide
 

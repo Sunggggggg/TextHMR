@@ -120,6 +120,12 @@ class GraphormerNet(nn.Module):
 
         return xout
 
+def add_joint(pose2d):
+    pelvis = pose2d[:,:,[11,12],:2].mean(dim=2, keepdim=True)
+    neck = pose2d[:,:,[5,6],:2].mean(dim=2, keepdim=True)
+
+    return torch.cat([pose2d, pelvis, neck], dim=2)
+
 def get_model(num_joint=19, embed_dim=256, depth=3, pretrained=False): 
     model = GraphormerNet(num_frames=cfg.DATASET.seqlen, num_joints=num_joint, embed_dim=embed_dim, depth=depth, pretrained=pretrained)
     return model

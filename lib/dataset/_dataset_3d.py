@@ -209,6 +209,14 @@ class Dataset3D(Dataset):
             else:
                 nj =14
 
+        # Lifter loss
+        if is_train:
+            coco_kp_3d_tensor = np.zeros((self.seqlen, 19, 3), dtype=np.float16)
+            coco_kp3d = convert_kps(self.get_sequence(start_index, end_index, self.db['joints3D']), src='spin', dst='coco')
+        else:
+            coco_kp_3d_tensor = np.zeros((self.seqlen, 19, 3), dtype=np.float16)
+            coco_kp3d = coco_kp_3d_tensor
+
         kp_3d_tensor = np.zeros((self.seqlen, nj, 3), dtype=np.float16)
 
         if self.dataset_name == '3dpw':
@@ -269,6 +277,11 @@ class Dataset3D(Dataset):
             theta_tensor[idx] = theta
             kp_3d_tensor[idx] = kp_3d[idx]
 
+            # Lifter loss
+            coco_kp_3d_tensor[idx, :17] = coco_kp3d[idx, :17]
+            coco_kp_3d_tensor[idx, 17:18] = coco_kp_3d_tensor[idx, [11, 12]].mean(axis=1, keepdims=True)
+            coco_kp_3d_tensor[idx, 18:19] = coco_kp_3d_tensor[idx, [5, 6]].mean(axis=1, keepdims=True)
+
         # (N-2)xnjx3
         # accel_gt = kp_3d_tensor[:-2] - 2 * kp_3d_tensor[1:-1] + kp_3d_tensor[2:]
         # accel_gt = np.linalg.norm(accel_gt, axis=2) # (N-2)xnj
@@ -279,6 +292,7 @@ class Dataset3D(Dataset):
                 'features': input,
                 'vitpose_j2d': inp_vitpose,
                 'text_features' : inp_text,
+                'coco_kp_3d': torch.from_numpy(coco_kp_3d_tensor).float(),
                 'theta': torch.from_numpy(theta_tensor).float(), # camera, pose and shape
                 'kp_2d': torch.from_numpy(kp_2d_tensor).float(), # 2D keypoints transformed according to bbox cropping
                 'kp_3d': torch.from_numpy(kp_3d_tensor).float(), # 3D keypoints
@@ -289,6 +303,7 @@ class Dataset3D(Dataset):
             target = {
                 'features': input,
                 'vitpose_j2d': inp_vitpose,
+                'coco_kp_3d': torch.from_numpy(coco_kp_3d_tensor).float(),
                 'theta': torch.from_numpy(theta_tensor).float(), # camera, pose and shape
                 'kp_2d': torch.from_numpy(kp_2d_tensor).float(), # 2D keypoints transformed according to bbox cropping
                 'kp_3d': torch.from_numpy(kp_3d_tensor).float(), # 3D keypoints

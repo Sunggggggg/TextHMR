@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.nn as nn
+from lib.core.config import BASE_DATA_DIR
 
 from .transformer import Transformer
 from .spin import Regressor
@@ -14,7 +15,8 @@ class THMR(nn.Module):
                  drop_rate=0.2, 
                  drop_path_rate=0.2, 
                  attn_drop_rate=0.,
-                 pretrained=os.path.join()) :
+                 pretrained=os.path.join(BASE_DATA_DIR, 'spin_model_checkpoint.pth.tar')
+        ) :
         super().__init__()
         self.input_proj = nn.Linear(2048, embed_dim)
         self.transformer = Transformer(depth=depth, embed_dim=embed_dim, mlp_hidden_dim=embed_dim*4.,

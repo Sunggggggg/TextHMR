@@ -121,7 +121,6 @@ class Trainer():
         bar = Bar(f'Epoch {self.epoch + 1}/{self.end_epoch}', fill='#', max=self.num_iters_per_epoch)
 
         for i in range(self.num_iters_per_epoch):
-            # Dirty solution to reset an iterator
             target_2d = target_3d = None
             if self.train_2d_iter:
                 try:
@@ -158,7 +157,7 @@ class Trainer():
             timer['data'] = time.time() - start
             start = time.time()
 
-            smpl_output = self.generator(input_text, input_feat, input_pose, is_train=True)
+            pose3d, smpl_output, joint_guide = self.generator(input_text, input_feat, input_pose, is_train=True)
             
             timer['forward'] = time.time() - start
             start = time.time()

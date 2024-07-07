@@ -1,6 +1,9 @@
 import os
 import torch
 import torch.nn as nn
+from lib.core.config import BASE_DATA_DIR
+
+from .lifter import add_joint
 
 import lib.models.lifter as lifter
 import lib.models.temporal_encoder as temporal_encoder
@@ -13,7 +16,7 @@ class Model(nn.Module):
                  num_joint, 
                  embed_dim, 
                  depth,
-                 lifter_pretrained=os.path.join()
+                 lifter_pretrained=os.path.join(BASE_DATA_DIR, 'pose_3dpw.pth.tar')
                  ) :
         super().__init__()
         self.pose_lifter = lifter.get_model(num_joint, embed_dim, depth, lifter_pretrained)
@@ -21,16 +24,11 @@ class Model(nn.Module):
         self.text_encoder = text_encoder.get_model(length=36)
         self.linking = linker.get_model()
 
-    def add_joint(self, pose2d):
-        pelvis = pose2d[:,:,[11,12],:2].mean(dim=2, keepdim=True)
-        neck = pose2d[:,:,[5,6],:2].mean(dim=2, keepdim=True)
-
-        return torch.cat([pose2d, pelvis, neck], dim=2)
-
     def forward(self, input_text, img_feat, pose2d, is_train=False, J_regressor=None):
         """
         input_text : [B, 36, 768]
         """
+        pose2d = add_joint(pose2d[..., :2])
         # First stage
         pose3d = self.pose_lifter(pose2d, img_feat)
         init_theta = self.init_hmr(img_feat, is_train, J_regressor) 
@@ -39,4 +37,4 @@ class Model(nn.Module):
         # Second stage
         joint_guide, semantic_guide = self.linking(pose3d, text_embed)
         
-        return pose3d, init_theta
+        return pose3d, init_theta, joint_guide

@@ -17,6 +17,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 from lib.utils.geometry import batch_rodrigues
+from lib.models.lifter import add_joint
+from lib.data_utils._kp_utils import convert_kps
 
 class Loss(nn.Module): 
     def __init__(
@@ -49,10 +51,12 @@ class Loss(nn.Module):
     def forward(
             self,
             generator_outputs_init,
-            generator_outputs_inter,
-            generator_outputs_final,
+            generator_outputs_lift_3d,
             data_2d,
             data_3d,
+            joint_guide=None,
+            generator_outputs_inter=None,
+            generator_outputs_final=None
         ):
         reduce = lambda x: x.contiguous().view((x.shape[0] * x.shape[1],) + x.shape[2:])
         flatten = lambda x: x.reshape(-1)
@@ -76,23 +80,98 @@ class Loss(nn.Module):
         real_3d_theta = data_3d['theta'][:, seq_len // 2 : seq_len // 2 + 1]
         w_3d = data_3d['w_3d'].type(torch.bool)[:, seq_len // 2 : seq_len // 2 + 1]
         w_smpl = data_3d['w_smpl'].type(torch.bool)[:, seq_len // 2 : seq_len // 2 + 1]
+        loss_dict = {}
 
-        loss_kp_2d_short, loss_kp_3d_short, loss_accel_2d_short, loss_accel_3d_short, loss_pose_short, loss_shape_short = self.cal_loss(sample_2d_count,
+        # 3D Lifting loss
+        lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1]
+        loss_lift_3d = self.keypoint_3d_loss(generator_outputs_lift_3d, lift_3d)
+
+        loss_dict['loss_kp_3d_lift'] = loss_lift_3d
+
+        # Joint-based regularization
+        if joint_guide is not None :
+            init_theta = generator_outputs_init[-1]
+            kp_3d = init_theta['kp_3d'] # [BT, 49, 3] T=1
+            coco_kp3d = add_joint(convert_kps(kp_3d, src='spin', dst='coco'))  # [B, 19, 3]
+            joint_regular = self.keypoint_3d_loss(coco_kp3d, joint_guide)
+
+            loss_dict['joint_regular'] = joint_regular
+
+        # SMPL loss
+        loss_kp_2d_init, loss_kp_3d_init, loss_accel_2d_init, loss_accel_3d_init, loss_pose_init, loss_shape_init = self.cal_loss(sample_2d_count,
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_init)
         
-        loss_kp_2d_short, loss_kp_3d_short, loss_accel_2d_short, loss_accel_3d_short, loss_pose_short, loss_shape_short = self.cal_loss(sample_2d_count,
-            real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_inter)
-        
-        loss_kp_2d_short, loss_kp_3d_short, loss_accel_2d_short, loss_accel_3d_short, loss_pose_short, loss_shape_short = self.cal_loss(sample_2d_count,
-            real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_final)
-        
-        # 3D Lifting loss
-        
-        
+        loss_dict_init = {
+            'loss_kp_2d_init' : loss_kp_2d_init,
+            'loss_kp_3d_init' : loss_kp_3d_init, 
+            'loss_accel_2d_init': loss_accel_2d_init, 
+            'loss_accel_3d_init': loss_accel_3d_init, 
+            'loss_pose_init': loss_pose_init, 
+            'loss_shape_init': loss_shape_init,
+        }
 
+        if loss_pose_init is not None:
+            loss_dict_init['loss_pose_init'] = loss_pose_init
+            loss_dict_init['loss_shape_init'] = loss_shape_init
+        
+        loss_dict.update(loss_dict_init)
 
+        if generator_outputs_inter is not None:
+            loss_kp_2d_inter, loss_kp_3d_inter, loss_accel_2d_inter, loss_accel_3d_inter, loss_pose_inter, loss_shape_inter = self.cal_loss(sample_2d_count,
+                real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_inter)
+            
+            loss_dict_inter = {
+                'loss_kp_2d_inter' : loss_kp_2d_inter,
+                'loss_kp_3d_inter' : loss_kp_3d_inter, 
+                'loss_accel_2d_inter': loss_accel_2d_inter, 
+                'loss_accel_3d_inter': loss_accel_3d_inter, 
+                'loss_pose_inter': loss_pose_inter, 
+                'loss_shape_inter': loss_shape_inter
+            }
 
+            if loss_pose_inter is not None:
+                loss_dict_inter['loss_pose_inter'] = loss_pose_inter
+                loss_dict_inter['loss_shape_inter'] = loss_shape_inter
 
+            loss_dict.update(loss_dict_inter)
+        
+        if generator_outputs_final is not None:
+            loss_kp_2d_final, loss_kp_3d_final, loss_accel_2d_final, loss_accel_3d_final, loss_pose_final, loss_shape_final = self.cal_loss(sample_2d_count,
+                real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_final)
+
+            loss_dict_final = {
+                'loss_kp_2d_final' : loss_kp_2d_final,
+                'loss_kp_3d_final' : loss_kp_3d_final, 
+                'loss_accel_2d_final': loss_accel_2d_final, 
+                'loss_accel_3d_final': loss_accel_3d_final, 
+                'loss_pose_final': loss_pose_final, 
+                'loss_shape_final': loss_shape_final
+            }
+
+            if loss_pose_final is not None:
+                loss_dict_final['loss_pose_final'] = loss_pose_final
+                loss_dict_final['loss_shape_final'] = loss_shape_final
+
+            loss_dict.update(loss_dict_final)
+
+        gen_loss = torch.stack(list(loss_dict.values())).sum()
+
+        return gen_loss, loss_dict
+
+    def cal_lift_loss(self, sample_2d_count, real_3d, w_3d, reduce, flatten, generator_outputs):
+        real_3d = reduce(real_3d)
+        w_3d = flatten(w_3d)
+
+        pred_j3d = generator_outputs[sample_2d_count:]
+
+        pred_j3d = reduce(pred_j3d)
+        pred_j3d = pred_j3d[w_3d]
+        real_3d = real_3d[w_3d]
+        loss_kp_3d = self.keypoint_3d_loss(pred_j3d, real_3d)
+
+        loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
+
+        return loss_kp_3d
     
     def cal_loss(self, sample_2d_count, real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs, short_flag=False):
         seq_len = real_2d.shape[1]
