@@ -14,6 +14,7 @@
 #
 # Contact: ps-license@tuebingen.mpg.de
 
+import torch
 import numpy as np
 
 def keypoint_hflip(kp, img_width):
@@ -30,6 +31,18 @@ def convert_kps(joints2d, src, dst):
     dst_names = eval(f'get_{dst}_joint_names')()
 
     out_joints2d = np.zeros((joints2d.shape[0], len(dst_names), 3))
+
+    for idx, jn in enumerate(dst_names):
+        if jn in src_names:
+            out_joints2d[:, idx] = joints2d[:, src_names.index(jn)]
+
+    return out_joints2d
+
+def convert_kps_torch(joints2d, src, dst):
+    src_names = eval(f'get_{src}_joint_names')()
+    dst_names = eval(f'get_{dst}_joint_names')()
+
+    out_joints2d = torch.zeros((joints2d.shape[0], len(dst_names), 3), device=joints2d.device)
 
     for idx, jn in enumerate(dst_names):
         if jn in src_names:

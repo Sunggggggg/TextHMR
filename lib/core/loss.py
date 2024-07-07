@@ -18,7 +18,7 @@ import torch.nn as nn
 import numpy as np
 from lib.utils.geometry import batch_rodrigues
 from lib.models.lifter import add_joint
-from lib.data_utils._kp_utils import convert_kps
+from lib.data_utils._kp_utils import convert_kps_torch
 
 class Loss(nn.Module): 
     def __init__(
@@ -93,7 +93,11 @@ class Loss(nn.Module):
         if joint_guide is not None :
             init_theta = generator_outputs_init[-1]
             kp_3d = init_theta['kp_3d'] # [BT, 49, 3] T=1
-            coco_kp3d = add_joint(convert_kps(kp_3d, src='spin', dst='coco'))  # [B, 19, 3]
+            coco_kp3d = convert_kps_torch(kp_3d, src='spin', dst='coco')  # [B, 19, 3]
+            pelvis = coco_kp3d[:,:,[11,12]].mean(dim=2, keepdim=True)
+            neck = coco_kp3d[:,:,[5,6]].mean(dim=2, keepdim=True)
+            coco_kp3d = torch.cat([coco_kp3d, pelvis, neck], dim=2)
+
             joint_regular = self.keypoint_3d_loss(coco_kp3d, joint_guide) * 30.
 
             loss_dict['joint_regular'] = joint_regular
