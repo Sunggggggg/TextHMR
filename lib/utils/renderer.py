@@ -73,7 +73,7 @@ class Renderer:
             mesh.apply_transform(rot)
 
         if mesh_filename is not None:
-            mesh.export(mesh_filename)
+            mesh.export(mesh_filename)  # obj 파일
 
         if angle and axis:
             R = trimesh.transformations.rotation_matrix(math.radians(angle), axis)

@@ -87,7 +87,7 @@ class Loss(nn.Module):
         lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1] # [B, 1, 19, 3]
         loss_lift_3d = self.cal_lift_loss(sample_2d_count, lift_3d, w_3d, reduce, flatten, generator_outputs_lift_3d)
 
-        loss_dict['loss_kp_3d_lift'] = loss_lift_3d * 0.01
+        loss_dict['loss_kp_3d_lift'] = loss_lift_3d * 0.1
 
         # Joint-based regularization
         if joint_guide is not None :
