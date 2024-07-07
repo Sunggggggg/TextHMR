@@ -113,7 +113,7 @@ class Linker(nn.Module) :
             semantic_guide = self.text2motion_linker[i](semantic_guide + self.text_query_pos_embed, 
                                     pose_feat + self.joint_key_pos_embed, pose_feat)
         
-        pose_feat = pose3d + self.joint_head(joint_guide)
+        joint_guide = pose3d + self.joint_head(joint_guide)
         semantic_guide = self.text_head(text_feat + semantic_guide)
         
         return joint_guide, semantic_guide
