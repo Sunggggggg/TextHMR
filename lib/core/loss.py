@@ -162,7 +162,7 @@ class Loss(nn.Module):
         pred_j3d = pred_j3d[w_3d]
         pred_j3d = reduce(pred_j3d)
         real_3d = real_3d[w_3d]
-        loss_kp_3d = self.keypoint_3d_loss(pred_j3d, real_3d)
+        loss_kp_3d = self.coco_keypoint_3d_loss(pred_j3d, real_3d)
 
         loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
 
@@ -314,6 +314,17 @@ class Loss(nn.Module):
             pred_pelvis = (pred_keypoints_3d[:, 2,:] + pred_keypoints_3d[:, 3,:]) / 2
             pred_keypoints_3d = pred_keypoints_3d - pred_pelvis[:, None, :]
             return self.criterion_keypoints(pred_keypoints_3d, gt_keypoints_3d).mean()
+        else:
+            return torch.FloatTensor(1).fill_(0.).to(self.device)
+
+    def coco_keypoint_3d_loss(self, pred_keypoints_3d, gt_keypoints_3d):
+        if len(gt_keypoints_3d) > 0:
+            gt_pelvis = gt_keypoints_3d[:, 17,:]
+            gt_keypoints_3d = gt_keypoints_3d - gt_pelvis[:, None, :]
+            pred_pelvis = pred_keypoints_3d[:, 17,:]
+            pred_keypoints_3d = pred_keypoints_3d - pred_pelvis[:, None, :]
+            loss = self.criterion_keypoints(pred_keypoints_3d, gt_keypoints_3d)
+            return loss.mean()
         else:
             return torch.FloatTensor(1).fill_(0.).to(self.device)
 
