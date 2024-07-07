@@ -76,7 +76,7 @@ class GraphormerNet(nn.Module):
         
     def _load_pretrained_model(self, pretrained):
         print("Loading pretrained posenet...")
-        checkpoint = load_checkpoint(load_dir=pretrained, pick_best=True)
+        checkpoint = load_checkpoint(load_dir=pretrained)
         self.load_state_dict(checkpoint['model_state_dict'])
 
     def SpaTemHead(self, x, img_feat):
