@@ -42,12 +42,20 @@ class Model(nn.Module):
         text_embed = self.proj_text(text_embed)
         joint_guide, semantic_guide = self.linking(pose3d, text_embed)
 
-        size = 1
-        for s in init_theta:
-            s['theta'] = s['theta'].reshape(B, size,-1)
-            s['verts'] = s['verts'].reshape(B, size,-1, 3)
-            s['kp_2d'] = s['kp_2d'].reshape(B, size,-1, 2)
-            s['kp_3d'] = s['kp_3d'].reshape(B, size,-1, 3)
-            s['rotmat'] = s['rotmat'].reshape(B, size,-1, 3, 3)
+        if is_train:
+            size = 1
+            for s in init_theta:
+                s['theta'] = s['theta'].reshape(B, size, -1)
+                s['verts'] = s['verts'].reshape(B, size, -1, 3)
+                s['kp_2d'] = s['kp_2d'].reshape(B, size, -1, 2)
+                s['kp_3d'] = s['kp_3d'].reshape(B, size, -1, 3)
+                s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
+        else :
+            for s in init_theta:
+                s['theta'] = s['theta'].reshape(B, -1)
+                s['verts'] = s['verts'].reshape(B, -1, 3)
+                s['kp_2d'] = s['kp_2d'].reshape(B, -1, 2)
+                s['kp_3d'] = s['kp_3d'].reshape(B, -1, 3)
+                s['rotmat'] = s['rotmat'].reshape(B, -1, 3, 3)
 
         return pose3d, init_theta, joint_guide

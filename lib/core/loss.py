@@ -104,14 +104,12 @@ class Loss(nn.Module):
             loss_dict['joint_regular'] = joint_regular
 
         # SMPL loss
-        loss_kp_2d_init, loss_kp_3d_init, loss_accel_2d_init, loss_accel_3d_init, loss_pose_init, loss_shape_init = self.cal_loss(sample_2d_count,
+        loss_kp_2d_init, loss_kp_3d_init, loss_pose_init, loss_shape_init = self.cal_loss(sample_2d_count,
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_init)
         
         loss_dict_init = {
             'loss_kp_2d_init' : loss_kp_2d_init,
-            'loss_kp_3d_init' : loss_kp_3d_init, 
-            'loss_accel_2d_init': loss_accel_2d_init, 
-            'loss_accel_3d_init': loss_accel_3d_init
+            'loss_kp_3d_init' : loss_kp_3d_init
         }
 
         if loss_pose_init is not None:
@@ -178,11 +176,11 @@ class Loss(nn.Module):
     
     def cal_loss(self, sample_2d_count, real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs, short_flag=False):
         seq_len = real_2d.shape[1]
-        if not short_flag:
-            if self.use_accel:
-                real_accel_2d, real_accel_3d = self.get_accel_input(real_2d, real_3d, seq_len, reduce, conf_2d_flag=True)
-            else:
-                real_accel_2d, real_accel_3d = self.get_vel_input(real_2d, real_3d, seq_len, reduce, conf_2d_flag=True)
+        # if not short_flag:
+        #     if self.use_accel:
+        #         real_accel_2d, real_accel_3d = self.get_accel_input(real_2d, real_3d, seq_len, reduce, conf_2d_flag=True)
+        #     else:
+        #         real_accel_2d, real_accel_3d = self.get_vel_input(real_2d, real_3d, seq_len, reduce, conf_2d_flag=True)
 
         real_2d = reduce(real_2d)
         real_3d = reduce(real_3d)
@@ -196,11 +194,11 @@ class Loss(nn.Module):
         pred_theta = reduce(pred_theta)
         pred_theta = pred_theta[w_smpl]
         
-        if not short_flag:
-            if self.use_accel:
-                preds_accel_2d, preds_accel_3d = self.get_accel_input(preds['kp_2d'], pred_j3d, seq_len, reduce)
-            else:
-                preds_accel_2d, preds_accel_3d = self.get_vel_input(preds['kp_2d'], pred_j3d, seq_len, reduce)
+        # if not short_flag:
+        #     if self.use_accel:
+        #         preds_accel_2d, preds_accel_3d = self.get_accel_input(preds['kp_2d'], pred_j3d, seq_len, reduce)
+        #     else:
+        #         preds_accel_2d, preds_accel_3d = self.get_vel_input(preds['kp_2d'], pred_j3d, seq_len, reduce)
                
         pred_j2d = reduce(preds['kp_2d'])
         pred_j3d = reduce(pred_j3d)
@@ -214,12 +212,12 @@ class Loss(nn.Module):
         # Generator Loss
         loss_kp_2d = self.keypoint_loss(pred_j2d, real_2d, openpose_weight=1., gt_weight=1.) * self.e_loss_weight
         loss_kp_3d = self.keypoint_3d_loss(pred_j3d, real_3d)
-        if not short_flag:
-            loss_accel_2d = self.keypoint_loss(preds_accel_2d, real_accel_2d, openpose_weight=1., gt_weight=1.) * self.vel_or_accel_2d_weight
-            loss_accel_3d = self.accel_3d_loss(preds_accel_3d, real_accel_3d) * self.vel_or_accel_3d_weight
-        else:
-            loss_accel_2d = None
-            loss_accel_3d = None
+        # if not short_flag:
+        #     loss_accel_2d = self.keypoint_loss(preds_accel_2d, real_accel_2d, openpose_weight=1., gt_weight=1.) * self.vel_or_accel_2d_weight
+        #     loss_accel_3d = self.accel_3d_loss(preds_accel_3d, real_accel_3d) * self.vel_or_accel_3d_weight
+        # else:
+        #     loss_accel_2d = None
+        #     loss_accel_3d = None
 
         loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
         
@@ -234,9 +232,16 @@ class Loss(nn.Module):
             loss_pose = None
             loss_shape = None
 
-        return loss_kp_2d, loss_kp_3d, loss_accel_2d, loss_accel_3d, loss_pose, loss_shape
+        return loss_kp_2d, loss_kp_3d, loss_pose, loss_shape
     
     def get_accel_input(self, pose_2d, pose_3d, seq_len, reduce, conf_2d_flag=False):
+        """
+        # real_3d = data_3d['kp_3d']                      # [B, T, 49, 3]
+        # real_3d_theta = data_3d['theta']                # [B, T, 3+72+10]
+        # w_3d = data_3d['w_3d'].type(torch.bool)         # [B, T]
+        # w_smpl = data_3d['w_smpl'].type(torch.bool)     # [B, T]
+        pose_3d : [B, 1, 49, 3]
+        """
         x0_2d = pose_2d[:, : seq_len - 2]
         x1_2d = pose_2d[:, 1: seq_len - 1]
         x2_2d = pose_2d[:, 2: seq_len]
