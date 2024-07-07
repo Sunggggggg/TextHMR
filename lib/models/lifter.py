@@ -127,5 +127,5 @@ def add_joint(pose2d):
     return torch.cat([pose2d, pelvis, neck], dim=2)
 
 def get_model(num_joint=19, embed_dim=256, depth=3, pretrained=False): 
-    model = GraphormerNet(num_frames=16 num_joints=num_joint, embed_dim=embed_dim, depth=depth, pretrained=pretrained)
+    model = GraphormerNet(num_frames=16, num_joints=num_joint, embed_dim=embed_dim, depth=depth, pretrained=pretrained)
     return model
