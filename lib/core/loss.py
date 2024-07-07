@@ -93,9 +93,9 @@ class Loss(nn.Module):
         if joint_guide is not None :
             init_theta = generator_outputs_init[-1]
             kp_3d = init_theta['kp_3d'] # [BT, 49, 3] T=1
-            coco_kp3d = convert_kps_torch(kp_3d, src='spin', dst='coco')  # [B, 19, 3]
-            pelvis = coco_kp3d[:,:,[11,12]].mean(dim=2, keepdim=True)
-            neck = coco_kp3d[:,:,[5,6]].mean(dim=2, keepdim=True)
+            coco_kp3d = convert_kps_torch(kp_3d, src='spin', dst='coco') 
+            pelvis = coco_kp3d[:, [11,12]].mean(dim=2, keepdim=True)
+            neck = coco_kp3d[:, [5,6]].mean(dim=2, keepdim=True)         # [B, 19, 3]
             coco_kp3d = torch.cat([coco_kp3d, pelvis, neck], dim=2)
 
             joint_regular = self.keypoint_3d_loss(coco_kp3d, joint_guide) * 30.
