@@ -203,9 +203,9 @@ class Loss(nn.Module):
         pred_j2d = reduce(preds['kp_2d'])
         pred_j3d = reduce(pred_j3d)
         pred_j3d = pred_j3d[w_3d]
-        if not short_flag:
-            real_accel_3d = real_accel_3d[w_3d]
-            preds_accel_3d = preds_accel_3d[w_3d]
+        # if not short_flag:
+        #     real_accel_3d = real_accel_3d[w_3d]
+        #     preds_accel_3d = preds_accel_3d[w_3d]
 
         real_3d_theta = real_3d_theta[w_smpl]
         real_3d = real_3d[w_3d]
