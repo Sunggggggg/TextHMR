@@ -279,8 +279,8 @@ class Dataset3D(Dataset):
 
             # Lifter loss
             coco_kp_3d_tensor[idx, :17] = coco_kp3d[idx, :17]
-            coco_kp_3d_tensor[idx, 17:18] = coco_kp_3d_tensor[idx, [11, 12]].mean(axis=1, keepdims=True)
-            coco_kp_3d_tensor[idx, 18:19] = coco_kp_3d_tensor[idx, [5, 6]].mean(axis=1, keepdims=True)
+            coco_kp_3d_tensor[idx, 17:18] = coco_kp_3d_tensor[idx, [11, 12]].mean(axis=0, keepdims=True)
+            coco_kp_3d_tensor[idx, 18:19] = coco_kp_3d_tensor[idx, [5, 6]].mean(axis=0, keepdims=True)
 
         # (N-2)xnjx3
         # accel_gt = kp_3d_tensor[:-2] - 2 * kp_3d_tensor[1:-1] + kp_3d_tensor[2:]
