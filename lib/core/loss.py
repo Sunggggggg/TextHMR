@@ -92,7 +92,8 @@ class Loss(nn.Module):
         # Joint-based regularization
         if joint_guide is not None :
             init_theta = generator_outputs_init[-1]
-            kp_3d = init_theta['kp_3d'] # [BT, 49, 3] T=1
+            kp_3d = init_theta['kp_3d'] # [B, 1, 49, 3] T=1
+            kp_3d = reduce(kp_3d)  
             coco_kp3d = convert_kps_torch(kp_3d, src='spin', dst='coco') 
             pelvis = coco_kp3d[:, [11,12]].mean(dim=1, keepdim=True)
             neck = coco_kp3d[:, [5,6]].mean(dim=1, keepdim=True)         # [B, 19, 3]
