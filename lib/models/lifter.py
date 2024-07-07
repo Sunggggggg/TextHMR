@@ -1,4 +1,4 @@
-from core.config import cfg
+from lib.core.config import cfg
 import os
 import numpy as np
 import torch
