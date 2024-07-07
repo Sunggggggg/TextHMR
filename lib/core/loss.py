@@ -83,8 +83,9 @@ class Loss(nn.Module):
         loss_dict = {}
 
         # 3D Lifting loss
+        # generator_outputs_lift_3d : [B, 19, 3]
         lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1]
-        loss_lift_3d = self.cal_lift_loss(generator_outputs_lift_3d, lift_3d)
+        loss_lift_3d = self.cal_lift_loss(sample_2d_count, real_3d, w_3d, reduce, flatten, generator_outputs_lift_3d)
 
         loss_dict['loss_kp_3d_lift'] = loss_lift_3d
 
