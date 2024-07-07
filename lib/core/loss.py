@@ -154,14 +154,12 @@ class Loss(nn.Module):
         return gen_loss, loss_dict
 
     def cal_lift_loss(self, sample_2d_count, real_3d, w_3d, reduce, flatten, generator_outputs):
-        real_3d = reduce(real_3d)
         w_3d = flatten(w_3d)
 
-        pred_j3d = generator_outputs[sample_2d_count:]
+        pred_j3d = generator_outputs[sample_2d_count:]  # [B, 19, 3]
 
-        pred_j3d = pred_j3d[w_3d]
-        pred_j3d = reduce(pred_j3d)
-        real_3d = real_3d[w_3d]
+        pred_j3d = pred_j3d[w_3d]                       # [B, 19, 3]
+        real_3d = real_3d[w_3d]                         # [B, 19, 3]
         loss_kp_3d = self.coco_keypoint_3d_loss(pred_j3d, real_3d)
 
         loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
@@ -319,9 +317,9 @@ class Loss(nn.Module):
 
     def coco_keypoint_3d_loss(self, pred_keypoints_3d, gt_keypoints_3d):
         if len(gt_keypoints_3d) > 0:
-            gt_pelvis = gt_keypoints_3d[:, 17,:]
+            gt_pelvis = gt_keypoints_3d[:, 17, :]
             gt_keypoints_3d = gt_keypoints_3d - gt_pelvis[:, None, :]
-            pred_pelvis = pred_keypoints_3d[:, 17,:]
+            pred_pelvis = pred_keypoints_3d[:, 17, :]
             pred_keypoints_3d = pred_keypoints_3d - pred_pelvis[:, None, :]
             loss = self.criterion_keypoints(pred_keypoints_3d, gt_keypoints_3d)
             return loss.mean()
