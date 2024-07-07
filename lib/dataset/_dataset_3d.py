@@ -106,7 +106,7 @@ class Dataset3D(Dataset):
         max_caption_len, caption_len = 36, inp_text.shape[0]
 
         # padding
-        inp_text = torch.cat([inp_text] + [torch.zeros(inp_text[0:1].shape) for _ in range(max_caption_len-caption_len)], dim=0)
+        inp_text = np.concatenate([inp_text] + [np.zeros_like(inp_text[0:1]) for _ in range(max_caption_len-caption_len)], axis=0)
         return inp_text
 
     def load_db(self):
