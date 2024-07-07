@@ -98,7 +98,7 @@ class Loss(nn.Module):
             neck = coco_kp3d[:, [5,6]].mean(dim=2, keepdim=True)         # [B, 19, 3]
             coco_kp3d = torch.cat([coco_kp3d, pelvis, neck], dim=2)
 
-            joint_regular = self.keypoint_3d_loss(coco_kp3d, joint_guide) * 30.
+            joint_regular = self.coco_keypoint_3d_loss(coco_kp3d, joint_guide) * 30.
 
             loss_dict['joint_regular'] = joint_regular
 
