@@ -87,7 +87,7 @@ class Loss(nn.Module):
         lift_3d = data_3d['coco_kp_3d'][:, seq_len // 2 : seq_len // 2 + 1] # [B, 1, 19, 3]
         loss_lift_3d = self.cal_lift_loss(sample_2d_count, lift_3d, w_3d, reduce, flatten, generator_outputs_lift_3d)
 
-        loss_dict['loss_kp_3d_lift'] = loss_lift_3d * 300.
+        loss_dict['loss_kp_3d_lift'] = loss_lift_3d * 0.1
 
         # Joint-based regularization
         if joint_guide is not None :
@@ -99,7 +99,7 @@ class Loss(nn.Module):
             neck = coco_kp3d[:, [5,6]].mean(dim=1, keepdim=True)         # [B, 19, 3]
             coco_kp3d = torch.cat([coco_kp3d, pelvis, neck], dim=1)
 
-            joint_regular = self.coco_keypoint_3d_loss(coco_kp3d, joint_guide) * 30.
+            joint_regular = self.coco_keypoint_3d_loss(coco_kp3d, joint_guide)
 
             loss_dict['joint_regular'] = joint_regular
 

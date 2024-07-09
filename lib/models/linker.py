@@ -61,7 +61,7 @@ class Linker(nn.Module) :
                  num_joints,
                  num_words,
                  num_heads=8,
-                 depth=3,
+                 depth=2,
                  ) :
         super().__init__()
         self.depth = depth
