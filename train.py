@@ -16,7 +16,7 @@ from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
 from lib.core.loss import Loss
 from lib.core.trainer import Trainer
-from lib.models.model import Model
+from lib.models.model_v1 import Model
 
 def main(cfg):
     if cfg.SEED_VALUE >= 0:

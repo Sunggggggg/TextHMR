@@ -15,16 +15,20 @@ class THMR(nn.Module):
                  drop_rate=0.2, 
                  drop_path_rate=0.2, 
                  attn_drop_rate=0.,
-                 pretrained=os.path.join(BASE_DATA_DIR, 'spin_model_checkpoint.pth.tar')
+                 pretrained=os.path.join(BASE_DATA_DIR, 'spin_model_checkpoint.pth.tar'),
+                 use_head=False,
         ) :
         super().__init__()
+        self.use_head = use_head
         self.input_proj = nn.Linear(2048, embed_dim)
         self.transformer = Transformer(depth=depth, embed_dim=embed_dim, mlp_hidden_dim=embed_dim*4.,
             h=h, drop_rate=drop_rate, drop_path_rate=drop_path_rate, attn_drop_rate=attn_drop_rate, length=seqlen)
         self.out_proj = nn.Linear(embed_dim, 2048)
-        self.head = nn.Conv1d(in_channels=seqlen, out_channels=1, kernel_size=1)
-        self.regressor = Regressor()
+        
+        if use_head:
+            self.head = nn.Conv1d(in_channels=seqlen, out_channels=1, kernel_size=1)
 
+        self.regressor = Regressor()
         if pretrained and os.path.isfile(pretrained):
             pretrained_dict = torch.load(pretrained)['model']
 
@@ -32,10 +36,15 @@ class THMR(nn.Module):
             print(f'=> loaded pretrained model from \'{pretrained}\'')
 
     def forward(self, img_feat, is_train=False, J_regressor=None, n_iter=3):
+        T = img_feat.shape[1]
+
         feature = self.input_proj(img_feat)
-        feature = self.transformer(feature)         # [B, T, dim]
-        feature = self.out_proj(feature)            # [B, T, 2048]
-        feature = self.head(feature)                # [B, 1, 2048]
+        feature = self.transformer(feature)             # [B, T, dim]
+        feature = self.out_proj(feature)                # [B, T, 2048]
+        if self.use_head :
+            feature = self.head(feature)                # [B, 1, 2048]
+        else :
+            feature = feature[:, T//2:T//2 + 1]
 
         smpl_output = self.regressor(feature, is_train=is_train, J_regressor=J_regressor, n_iter=n_iter)
         return smpl_output

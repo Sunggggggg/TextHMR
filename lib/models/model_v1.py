@@ -10,6 +10,8 @@ import lib.models.temporal_encoder as temporal_encoder
 import lib.models.text_encoder as text_encoder
 import lib.models.linker as linker
 
+""" 7/8 PPT """
+
 class Model(nn.Module):
     def __init__(self, 
                  seqlen=16,
