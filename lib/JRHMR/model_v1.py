@@ -5,10 +5,10 @@ from lib.core.config import BASE_DATA_DIR
 
 from .lifter import add_joint
 
-import lib.models.lifter as lifter
-import lib.models.temporal_encoder as temporal_encoder
-import lib.models.text_encoder as text_encoder
-import lib.models.linker as linker
+import lib.JRHMR.lifter as lifter
+import lib.JRHMR.temporal_encoder as temporal_encoder
+import lib.JRHMR.text_encoder as text_encoder
+import lib.JRHMR.linker as linker
 
 """ 7/8 PPT """
 

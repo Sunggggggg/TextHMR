@@ -107,7 +107,7 @@ class Dataset3D(Dataset):
 
         # padding
         inp_text = np.concatenate([inp_text] + [np.zeros_like(inp_text[0:1]) for _ in range(max_caption_len-caption_len)], axis=0)
-        return inp_text
+        return inp_text, caption_len
 
     def load_db(self):
 
@@ -251,7 +251,7 @@ class Dataset3D(Dataset):
         
         # Text embedding 
         img_names = self.get_sequence(start_index, end_index, self.db['img_name'])  # ./data/3dpw ...
-        inp_text = torch.from_numpy(self.load_text_emb(img_names[8])).float()
+        inp_text, caption_len = torch.from_numpy(self.load_text_emb(img_names[8])).float()
 
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)
 
