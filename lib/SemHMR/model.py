@@ -16,7 +16,7 @@ class Model(nn.Module):
         self.stride = 4
         self.init_hmr = temporal_encoder.get_model(depth=3, length=16, embed_dim=512)
         self.text_encoder = text_encoder.get_model(length=36, embed_dim=512)
-        self.highlighter = highlight.get_model(embed_dim=512, stride=1)
+        self.highlighter = highlight.get_model(embed_dim=512)
 
         self.proj_local1 = nn.Linear(2048, 256)
         self.proj_local2 = nn.Linear(512, 256)
