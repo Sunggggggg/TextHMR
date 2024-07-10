@@ -42,7 +42,7 @@ class THMR(nn.Module):
         feature = self.transformer(feature)             # [B, T, dim]
         feature_out = self.out_proj(feature)                # [B, T, 2048]
 
-        smpl_output = self.regressor(feature_out, is_train=is_train, J_regressor=J_regressor, n_iter=n_iter)
+        smpl_output, init_pred = self.regressor(feature_out, is_train=is_train, J_regressor=J_regressor, n_iter=n_iter)
 
         if is_train:
             size = T
@@ -56,7 +56,7 @@ class THMR(nn.Module):
             s['kp_3d'] = s['kp_3d'].reshape(B, size, -1, 3)
             s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
 
-        return smpl_output, feature
+        return smpl_output, init_pred, feature
 
 def get_model(depth=3, length=16, embed_dim=512, mlp_hidden_dim=1024, h=8, drop_rate=0.2, drop_path_rate=0.2, attn_drop_rate=0.):
     model = THMR(depth=depth, seqlen=length, embed_dim=embed_dim)

@@ -48,6 +48,7 @@ class Loss(nn.Module):
         self.criterion_regr = nn.MSELoss(reduction='none').to(self.device)
         self.criterion_accel = nn.MSELoss('none').to(self.device)
         self.criterion_semantic = nn.KLDivLoss().to(self.device)
+        self.criterion_index = nn.MSELoss().to(self.device)
     
     def forward(
             self,
@@ -360,10 +361,20 @@ class Loss(nn.Module):
         score_map : [B, T, N]
         """
         B, T, N = score_map.shape
-        mid_frame = score_map[:, T//2]
+        mid_frame = score_map[:, T//2:T//2+1]
         adj_idx = (T//2-1, T//2+1)
         adj_frame = torch.cat([score_map[:, adj_idx]] ,dim=1)
 
         loss = self.criterion_semantic(adj_frame.log(), mid_frame).mean()
+        return loss
+    
+    def index_losses(self, index_map):
+        """
+        score_map : [B, T, N]
+        """
+        B, T, N = index_map.shape
+        mid_frame = index_map[:, T//2:T//2+1]
+
+        loss = self.criterion_index(index_map, mid_frame).mean()
         return loss
         

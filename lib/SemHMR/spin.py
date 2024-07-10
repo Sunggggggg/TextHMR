@@ -80,6 +80,15 @@ class Regressor(nn.Module):
             pred_shape = self.decshape(xc) + pred_shape
             pred_cam = self.deccam(xc) + pred_cam
 
+        if is_train:
+            next_init_pose = pred_pose.reshape(-1, seq_len, 144)[:, seq_len // 2 - 1: seq_len // 2 + 2]
+            next_init_shape = pred_shape.reshape(-1, seq_len, 10)[:, seq_len // 2 - 1: seq_len // 2 + 2]
+            next_init_cam = pred_cam.reshape(-1, seq_len, 3)[:, seq_len // 2 - 1: seq_len // 2 + 2]
+        else:
+            next_init_pose = pred_pose.reshape(-1, seq_len, 144)[:, 0][:, None, :]
+            next_init_shape = pred_shape.reshape(-1, seq_len, 10)[:, 0][:, None, :]
+            next_init_cam = pred_cam.reshape(-1, seq_len, 3)[:, 0][:, None, :]
+
         pred_rotmat = rot6d_to_rotmat(pred_pose).view(batch_size, 24, 3, 3)
 
         pred_output = self.smpl(
@@ -109,7 +118,7 @@ class Regressor(nn.Module):
             'rotmat' : pred_rotmat                                      # [BT, 24, 3, 3]
         }]
         
-        return output
+        return output, (next_init_pose, next_init_shape, next_init_cam)
 
 def projection(pred_joints, pred_camera):
     pred_cam_t = torch.stack([pred_camera[:, 1],
