@@ -131,7 +131,7 @@ class Transformer(nn.Module):
         return x
     
 def get_model(depth=3, length=16, embed_dim=512, mlp_hidden_dim=1024, h=8, drop_rate=0.2, drop_path_rate=0.2, attn_drop_rate=0.):
-    model = Transformer(depth=depth, seqlen=length, embed_dim=embed_dim, mlp_hidden_dim=mlp_hidden_dim)
+    model = Transformer(depth=depth, length=length, embed_dim=embed_dim, mlp_hidden_dim=mlp_hidden_dim)
     return model
 
 def get_model_CA(embed_dim=256, kv_num=16):
