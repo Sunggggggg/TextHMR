@@ -251,7 +251,8 @@ class Dataset3D(Dataset):
         
         # Text embedding 
         img_names = self.get_sequence(start_index, end_index, self.db['img_name'])  # ./data/3dpw ...
-        inp_text, caption_len = torch.from_numpy(self.load_text_emb(img_names[8])).float()
+        inp_text, caption_len = self.load_text_emb(img_names[8])
+        inp_text = torch.from_numpy(inp_text).float()
 
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)
 
