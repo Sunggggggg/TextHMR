@@ -15,7 +15,7 @@ from lib.dataset._loaders_only3d import get_data_loaders
 from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
 from lib.core.loss import Loss
-from lib.core.trainer import Trainer
+from lib.core.trainer_JRHMR import Trainer
 from lib.models.model_v2 import Model
 
 def main(cfg):

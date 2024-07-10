@@ -14,9 +14,9 @@ from lib.utils.utils import prepare_output_dir, create_logger, get_optimizer
 from lib.dataset._loaders_only3d import get_data_loaders
 from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
-from lib.core.loss import Loss
-from lib.core.trainer import Trainer
-from lib.models.model_v1 import Model
+from lib.core.loss import GLoTLoss
+from lib.core.trainer_SemHMR import Trainer
+from lib.SemHMR.model import Model
 
 def main(cfg):
     if cfg.SEED_VALUE >= 0:
@@ -44,7 +44,7 @@ def main(cfg):
     data_loaders = get_data_loaders(cfg)
 
     # ========= Compile Loss ========= #
-    loss = Loss(
+    loss = GLoTLoss(
         e_loss_weight=cfg.LOSS.KP_2D_W,
         e_3d_loss_weight=cfg.LOSS.KP_3D_W,
         e_pose_loss_weight=cfg.LOSS.POSE_W,
