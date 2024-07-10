@@ -105,10 +105,7 @@ class Trainer():
         kp_3d_loss = AverageMeter()
         kp_2d_loss_short = AverageMeter()
         kp_3d_loss_short = AverageMeter()
-        accel_loss_mae_2d = AverageMeter()
-        accel_loss_mae_3d = AverageMeter()
-        accel_loss_short_2d = AverageMeter()
-        accel_loss_short_3d = AverageMeter()
+        semantic_loss = AverageMeter()
 
         timer = {
             'data': 0,
@@ -194,6 +191,7 @@ class Trainer():
             kp_3d_loss.update(loss_dict['loss_kp_3d_init'].item(), input_feat.size(0))
             kp_2d_loss_short.update(loss_dict['loss_kp_2d_short'].item(), input_feat.size(0))
             kp_3d_loss_short.update(loss_dict['loss_kp_3d_short'].item(), input_feat.size(0))
+            semantic_loss.update(loss_dict['loss_global_semantic'].item(), input_feat.size(0))
 
             timer['backward'] = time.time() - start
             timer['batch'] = timer['data'] + timer['forward'] + timer['loss'] + timer['backward']
@@ -201,7 +199,8 @@ class Trainer():
 
             summary_string = f'({i + 1}/{self.num_iters_per_epoch}) | Total: {bar.elapsed_td} | ETA: {bar.eta_td:} | loss: {losses.avg:.2f} ' \
                              f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f} ' \
-                             f'| 2d_short: {kp_2d_loss.avg:.2f} | 3d_short: {kp_3d_loss.avg:.2f} ' 
+                             f'| 2d_short: {kp_2d_loss.avg:.2f} | 3d_short: {kp_3d_loss.avg:.2f} ' \
+                             f'| semantic: {semantic_loss.avg:.2f} '
             
             for k,v in timer.items():
                 summary_string += f' | {k}: {v:.2f}'
