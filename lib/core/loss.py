@@ -443,7 +443,8 @@ class GLoTLoss(nn.Module):
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_short)
 
         # 
-        loss_global_semantic = self.index_losses(index_map) * 600.
+        #loss_global_semantic = self.index_losses(index_map) * 600.
+        loss_global_semantic = index_map * 600.
 
         loss_dict = {
             'loss_kp_2d_init': loss_kp_2d_init,

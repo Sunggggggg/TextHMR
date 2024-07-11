@@ -20,12 +20,14 @@ class Model(nn.Module):
 
         self.proj_local1 = nn.Linear(2048, 256)
         self.proj_local2 = nn.Linear(512, 256)
+        self.proj_local3 = nn.Linear(512, 256)
         self.local_trans = transformer.get_model(embed_dim=256, mlp_hidden_dim=256*4, length=self.stride*2+1)
-        self.cross_atten = transformer.get_model_CA(embed_dim=256, kv_num=16)
+        self.cross_atten1 = transformer.get_model_CA(embed_dim=256, kv_num=16)
+        self.cross_atten2 = transformer.get_model_CA(embed_dim=256, kv_num=16)
 
         self.local_regressor = HSCR()
         
-    def forward(self, input_text, img_feat, pose2d, is_train=False, J_regressor=None):
+    def forward(self, input_text, img_feat, pose2d, caption_len, is_train=False, J_regressor=None):
         """
         input_text : [B, 36, 768] 
         """
@@ -33,8 +35,8 @@ class Model(nn.Module):
         
         # First stage
         init_smpl_output, init_pred, temp_feat = self.init_hmr(img_feat, is_train, J_regressor) # [B, T, *]
-        text_embed = self.text_encoder(input_text)                          # [B, N, 512]
-        motion_feat, softargmax = self.highlighter(temp_feat, text_embed)   # [B, T, 512]
+        text_embed = self.text_encoder(input_text)                                                  # [B, N, 512]
+        selected_text_embeds, semantic_loss = self.highlighter(temp_feat, text_embed, caption_len)  # [B, 4, 512]
 
         # Second stage
         local_feat = img_feat[:, T//2-self.stride : T//2+self.stride+1]
@@ -42,8 +44,11 @@ class Model(nn.Module):
         local_feat = self.local_trans(local_feat)
         local_feat = local_feat[:, self.stride-1:self.stride+2]             # [B, 3, 256]
 
-        motion_feat = self.proj_local2(motion_feat)                         # [B, T, 256]
-        local_feat = self.cross_atten(local_feat, motion_feat, motion_feat)
+        temp_feat = self.proj_local2(temp_feat)                             # [B, T, 256]
+        local_feat = self.cross_atten1(local_feat, temp_feat, temp_feat)
+
+        selected_text_embeds = self.proj_local3(selected_text_embeds)
+        local_feat = self.cross_atten2(local_feat, selected_text_embeds, selected_text_embeds)
 
         # Regressor
         if is_train:
@@ -73,4 +78,4 @@ class Model(nn.Module):
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
                 s['scores'] = scores
 
-        return smpl_output, init_smpl_output, softargmax
+        return smpl_output, init_smpl_output, semantic_loss

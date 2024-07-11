@@ -293,6 +293,7 @@ class Dataset3D(Dataset):
                 'features': input,
                 'vitpose_j2d': inp_vitpose,
                 'text_features' : inp_text,
+                'caption_len': caption_len,
                 'coco_kp_3d': torch.from_numpy(coco_kp_3d_tensor).float(),
                 'theta': torch.from_numpy(theta_tensor).float(), # camera, pose and shape
                 'kp_2d': torch.from_numpy(kp_2d_tensor).float(), # 2D keypoints transformed according to bbox cropping

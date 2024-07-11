@@ -148,19 +148,22 @@ class Trainer():
                 input_feat = torch.cat((target_2d['features'], target_3d['features']), dim=0).cuda()
                 input_pose = torch.cat((target_2d['vitpose_j2d'], target_3d['vitpose_j2d']), dim=0).cuda()
                 input_text = torch.cat((target_2d['text_features'], target_3d['text_features']), dim=0).cuda()
+                caption_len = torch.cat((target_2d['caption_len'], target_3d['caption_len']), dim=0).cuda()
             elif target_3d:
                 input_feat = target_3d['features'].cuda()
                 input_pose = target_3d['vitpose_j2d'].cuda()
                 input_text = target_3d['text_features'].cuda()
+                caption_len = target_3d['caption_len'].cuda()
             else:
                 input_feat = target_2d['features'].cuda()
                 input_pose = target_2d['vitpose_j2d'].cuda()
                 input_text = target_2d['text_features'].cuda()
+                caption_len = target_2d['caption_len'].cuda()
 
             timer['data'] = time.time() - start
             start = time.time()
 
-            smpl_output, init_smpl_output, softargmax = self.generator(input_text, input_feat, input_pose, is_train=True)
+            smpl_output, init_smpl_output, softargmax = self.generator(input_text, input_feat, input_pose, caption_len, is_train=True)
             
             timer['forward'] = time.time() - start
             start = time.time()
