@@ -42,14 +42,16 @@ class TEncoder(nn.Module):
         self.input_proj = nn.Linear(768, embed_dim)
         self.transformer = Transformer(depth=depth, length=length, embed_dim=embed_dim, mlp_hidden_dim=mlp_hidden_dim, h=h, 
                         drop_rate=drop_rate, drop_path_rate=drop_path_rate, attn_drop_rate=attn_drop_rate)
+        self.pool = nn.MaxPool2d((length, 1))
     
     def forward(self, text_embed):
         feature = self.input_proj(text_embed)
-        feature = self.transformer(feature)
+        feature = self.transformer(feature)     # [B, N, 128]
+        feature = self.pool(feature)            # [B, 1, 128]
 
         return feature
 
-def get_model(depth=2, length=16, embed_dim=512, mlp_hidden_dim=1024, h=8, drop_rate=0.2, drop_path_rate=0.2, attn_drop_rate=0.):
-    model = TEncoder(depth=depth, length=length, embed_dim=embed_dim, mlp_hidden_dim=mlp_hidden_dim, h=h, 
+def get_model(depth=2, length=16, embed_dim=128, mlp_hidden_dim=1024, h=8, drop_rate=0.2, drop_path_rate=0.2, attn_drop_rate=0.):
+    model = TEncoder(depth=depth, length=length, embed_dim=embed_dim, mlp_hidden_dim=embed_dim*4., h=h, 
                             drop_rate=drop_rate, drop_path_rate=drop_path_rate, attn_drop_rate=attn_drop_rate)
     return model

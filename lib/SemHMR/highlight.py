@@ -37,7 +37,7 @@ class Highlighter(nn.Module):
         loss
         """
         B, T = temp_feat.shape[:2]
-        img_feat = self.proj_unbaised1(temp_feat)
+        img_feat = self.proj_unbaised1(temp_feat)           # One-hot vector
         text_feat = self.proj_unbaised2(text_embed)
 
         matrix = img_feat @ text_feat.permute(0, 2, 1)      # [B, T, N]

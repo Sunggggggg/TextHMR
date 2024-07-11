@@ -202,7 +202,7 @@ class Trainer():
 
             summary_string = f'({i + 1}/{self.num_iters_per_epoch}) | Total: {bar.elapsed_td} | ETA: {bar.eta_td:} | loss: {losses.avg:.2f} ' \
                              f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f} ' \
-                             f'| 2d_short: {kp_2d_loss.avg:.2f} | 3d_short: {kp_3d_loss.avg:.2f} ' \
+                             f'| 2d_short: {kp_2d_loss_short.avg:.2f} | 3d_short: {kp_3d_loss_short.avg:.2f} ' \
                              f'| semantic: {semantic_loss.avg:.2f} '
             
             for k,v in timer.items():
