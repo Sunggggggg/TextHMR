@@ -51,7 +51,8 @@ class Highlighter(nn.Module):
             
             # Selection
             _, indices = torch.sort(norm_matrix, dim=-1, descending=True)       # [n]
-            selected_text_embed = text_embed[:, indices[:self.num_select]]      # [B, n, dim]
+            batch_text_embed = text_embed[b, :caption_len[b]]                   # [n, dim]
+            selected_text_embed = batch_text_embed[indices[:self.num_select]]   # [4, dim]
             selected_text_embeds.append(selected_text_embed)
 
             # Loss
