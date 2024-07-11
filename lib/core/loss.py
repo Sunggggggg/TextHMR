@@ -674,5 +674,11 @@ class GLoTLoss(nn.Module):
         loss = 0.0
         for map in index_map :
             T, N = map.shape
-            loss -= (map @ map[T//2][None, :].permute(1, 0)).mean()
+            losses = []
+            vec_tar = map[T//2] / torch.norm(map[T//2], p=2)
+            for t in range(T) :
+                if t != T//2 :
+                    vec_src = map[t] / torch.norm(map[t], p=2)
+                    losses.append(1. - (vec_src @ vec_tar))
+            loss += torch.mean(losses)
         return loss
