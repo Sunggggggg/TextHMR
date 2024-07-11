@@ -30,7 +30,7 @@ class Highlighter(nn.Module):
         """
         temp_feat       : [B, T, dim]
         text_embed      : [B, N, dim]
-        caption_len     : [B, 1]
+        caption_len     : [B]
 
         return
         selected_text_embeds    : [B, self.num_select, dim]
@@ -46,8 +46,8 @@ class Highlighter(nn.Module):
         selected_text_embeds = []
         for b in range(B) :
             # Remove padding
-            matrix = matrix[b, :, :caption_len[b]]              # [T, n]
-            norm_matrix = normalization(matrix)                 # 
+            batch_matrix = matrix[b, :, :caption_len[b]]              # [T, n]
+            norm_matrix = normalization(batch_matrix)                 # 
             
             # Selection
             mid_frame = norm_matrix[T//2] 

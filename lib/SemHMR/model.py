@@ -29,7 +29,8 @@ class Model(nn.Module):
         
     def forward(self, input_text, img_feat, pose2d, caption_len, is_train=False, J_regressor=None):
         """
-        input_text : [B, 36, 768] 
+        input_text  : [B, 36, 768] 
+        caption_len : [B]
         """
         B, T = img_feat.shape[:2]
         
