@@ -34,7 +34,7 @@ class Model(nn.Module):
         B, T = img_feat.shape[:2]
         
         # First stage
-        init_smpl_output, init_pred, temp_feat = self.init_hmr(img_feat, is_train, J_regressor) # [B, T, *]
+        init_smpl_output, init_pred, temp_feat = self.init_hmr(img_feat, is_train, J_regressor)     # [B, T, *]
         text_embed = self.text_encoder(input_text)                                                  # [B, N, 512]
         selected_text_embeds, semantic_loss = self.highlighter(temp_feat, text_embed, caption_len)  # [B, 4, 512]
 

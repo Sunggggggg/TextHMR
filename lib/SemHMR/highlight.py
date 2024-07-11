@@ -55,7 +55,7 @@ class Highlighter(nn.Module):
             selected_text_embeds.append(selected_text_embed)
 
             # Loss
-            loss -= (norm_matrix @ norm_matrix[T//2][None, :]).mean()
+            loss -= (norm_matrix @ norm_matrix[T//2][None, :].permute(1, 0)).mean()
 
         selected_text_embeds = torch.stack(selected_text_embeds, dim=0)         # [B, n, dim]
         return selected_text_embeds, loss
