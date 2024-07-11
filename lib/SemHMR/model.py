@@ -23,7 +23,7 @@ class Model(nn.Module):
         self.proj_local3 = nn.Linear(512, 256)
         self.local_trans = transformer.get_model(embed_dim=256, mlp_hidden_dim=256*4, length=self.stride*2+1)
         self.cross_atten1 = transformer.get_model_CA(embed_dim=256, kv_num=16)
-        self.cross_atten2 = transformer.get_model_CA(embed_dim=256, kv_num=16)
+        self.cross_atten2 = transformer.get_model_CA(embed_dim=256, kv_num=4)
 
         self.local_regressor = HSCR()
         
