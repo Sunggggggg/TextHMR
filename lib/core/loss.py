@@ -680,5 +680,6 @@ class GLoTLoss(nn.Module):
                 if t != T//2 :
                     vec_src = map[t] / torch.norm(map[t], p=2)
                     losses.append(1. - (vec_src @ vec_tar))
-            loss += torch.mean(losses)
+            losses = torch.cat(losses)
+            loss += losses.mean()
         return loss
