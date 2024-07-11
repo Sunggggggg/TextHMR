@@ -37,7 +37,7 @@ class Model(nn.Module):
         # First stage
         init_smpl_output, init_pred, temp_feat = self.init_hmr(img_feat, is_train, J_regressor)     # [B, T, *]
         text_embed = self.text_encoder(input_text)                                                  # [B, N, 512]
-        selected_text_embeds, semantic_loss = self.highlighter(temp_feat, text_embed, caption_len)  # [B, 4, 512]
+        selected_text_embeds, batch_matrix = self.highlighter(temp_feat, text_embed, caption_len)  # [B, 4, 512]
 
         # Second stage
         local_feat = img_feat[:, T//2-self.stride : T//2+self.stride+1]
@@ -79,4 +79,4 @@ class Model(nn.Module):
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
                 s['scores'] = scores
 
-        return smpl_output, init_smpl_output, semantic_loss
+        return smpl_output, init_smpl_output, batch_matrix

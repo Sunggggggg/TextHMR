@@ -42,7 +42,7 @@ class Highlighter(nn.Module):
 
         matrix = img_feat @ text_feat.permute(0, 2, 1)      # [B, T, N]
 
-        loss = 0.
+        batch_matrixs = []
         selected_text_embeds = []
         for b in range(B) :
             # Remove padding
@@ -57,10 +57,10 @@ class Highlighter(nn.Module):
             selected_text_embeds.append(selected_text_embed)
 
             # Loss
-            loss -= (norm_matrix @ norm_matrix[T//2][None, :].permute(1, 0)).mean()
+            batch_matrixs.append(batch_matrix)
 
         selected_text_embeds = torch.stack(selected_text_embeds, dim=0)         # [B, n, dim]
-        return selected_text_embeds, loss
+        return selected_text_embeds, batch_matrixs
      
 def get_model(embed_dim=512):
     model = Highlighter(embed_dim=embed_dim)

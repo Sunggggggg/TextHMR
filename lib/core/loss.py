@@ -669,10 +669,10 @@ class GLoTLoss(nn.Module):
     
     def index_losses(self, index_map):
         """
-        score_map : [B, T, N]
+        map : [T, N]
         """
-        B, T, N = index_map.shape
-        mid_frame = index_map[:, T//2:T//2+1]
-
-        loss = self.criterion_index(index_map, mid_frame).mean()
+        loss = 0.0
+        for map in index_map :
+            T, N = map.shape
+            loss -= (map @ map[T//2][None, :].permute(1, 0)).mean()
         return loss
