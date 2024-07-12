@@ -15,14 +15,14 @@ class Model(nn.Module):
         super().__init__()
         self.stride = 4
         self.init_hmr = temporal_encoder.get_model(depth=3, length=16, embed_dim=512)
-        self.text_encoder = text_encoder.get_model(length=36, embed_dim=256)
+        self.text_encoder = text_encoder.get_model(learn_query=True, embed_dim=256)
 
         self.proj_local1 = nn.Linear(2048, 256)
         self.proj_local2 = nn.Linear(512, 256)
         self.proj_local3 = nn.Linear(256, 256)
         self.local_trans = transformer.get_model(embed_dim=256, mlp_hidden_dim=256*4, length=self.stride*2+1)
         self.cross_atten1 = transformer.get_model_CA(embed_dim=256, kv_num=16)
-        self.cross_atten2 = transformer.get_model_CA(embed_dim=256, kv_num=4)
+        self.cross_atten2 = transformer.get_model_CA(embed_dim=256, kv_num=64)
 
         self.local_regressor = HSCR()
         
@@ -35,7 +35,7 @@ class Model(nn.Module):
         
         # First stage
         init_smpl_output, init_pred, temp_feat = self.init_hmr(img_feat, is_train, J_regressor)     # [B, T, *]
-        text_embed = self.text_encoder(input_text)                                                  # [B, 36, 256]
+        text_embed = self.text_encoder(input_text)                                                  # [B, 64, 256]
 
         # Second stage
         local_feat = img_feat[:, T//2-self.stride : T//2+self.stride+1]
