@@ -73,7 +73,7 @@ class LQTEncoder(nn.Module):
         for b in range(B) :
             # Remove padding
             batch_text_embed = feature[b:b+1, :caption_len[b]]    # [1, n, dim]
-            motion_query = self.motion_extract(motion_query, batch_text_embed, batch_text_embed)
+            motion_query = self.motion_extract(self.motion_query, batch_text_embed, batch_text_embed)
             motion_queries.append(motion_query)
         motion_queries = torch.cat(motion_queries, dim=0)
         motion_queries = self.transformer(motion_queries)
