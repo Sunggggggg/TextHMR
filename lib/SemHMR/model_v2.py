@@ -35,7 +35,7 @@ class Model(nn.Module):
         
         # First stage
         init_smpl_output, init_pred, temp_feat = self.init_hmr(img_feat, is_train, J_regressor)     # [B, T, *]
-        text_embed = self.text_encoder(input_text, caption_len)                                                  # [B, 64, 256]
+        text_embed = self.text_encoder(input_text, caption_len)                                     # [B, 64, 256]
 
         # Second stage
         local_feat = img_feat[:, T//2-self.stride : T//2+self.stride+1]
