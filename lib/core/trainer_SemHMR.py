@@ -194,7 +194,7 @@ class Trainer():
             kp_3d_loss.update(loss_dict['loss_kp_3d_init'].item(), input_feat.size(0))
             kp_2d_loss_short.update(loss_dict['loss_kp_2d_short'].item(), input_feat.size(0))
             kp_3d_loss_short.update(loss_dict['loss_kp_3d_short'].item(), input_feat.size(0))
-            semantic_loss.update(loss_dict['loss_global_semantic'].item(), input_feat.size(0))
+            #semantic_loss.update(loss_dict['loss_global_semantic'].item(), input_feat.size(0))
 
             timer['backward'] = time.time() - start
             timer['batch'] = timer['data'] + timer['forward'] + timer['loss'] + timer['backward']
