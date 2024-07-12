@@ -77,4 +77,4 @@ class Model(nn.Module):
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
                 s['scores'] = scores
 
-        return smpl_output, init_smpl_output, batch_matrix
+        return smpl_output, init_smpl_output, None

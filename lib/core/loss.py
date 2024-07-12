@@ -442,10 +442,6 @@ class GLoTLoss(nn.Module):
         loss_kp_2d_short, loss_kp_3d_short, loss_accel_2d_short, loss_accel_3d_short, loss_pose_short, loss_shape_short = self.cal_loss(sample_2d_count, \
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_short)
 
-        # 
-        loss_global_semantic = self.index_losses(index_map) * 60.
-        #loss_global_semantic = index_map * 600.
-
         loss_dict = {
             'loss_kp_2d_init': loss_kp_2d_init,
             'loss_kp_3d_init': loss_kp_3d_init,
@@ -455,7 +451,6 @@ class GLoTLoss(nn.Module):
             'loss_accel_3d_init': loss_accel_3d_init,
             'loss_accel_2d_short': loss_accel_2d_short,
             'loss_accel_3d_short': loss_accel_3d_short,
-            'loss_global_semantic': loss_global_semantic,
         }
 
         if loss_pose_init is not None:
@@ -463,7 +458,11 @@ class GLoTLoss(nn.Module):
             loss_dict['loss_pose_short'] = loss_pose_short
             loss_dict['loss_shape_init'] = loss_shape_init
             loss_dict['loss_shape_short'] = loss_shape_short
-            
+        
+        if index_map is not None :
+            loss_global_semantic = self.index_losses(index_map) * 60.
+            #loss_global_semantic = index_map * 600.
+            loss_dict['loss_global_semantic'] = loss_global_semantic
             
         gen_loss = torch.stack(list(loss_dict.values())).sum()
 
