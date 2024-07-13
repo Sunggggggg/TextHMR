@@ -31,7 +31,8 @@ class Model(nn.Module):
         """
         joint_feat : [B, T, J, dim]
         """
-        x = joint_feat[:, self.mid_frame]  
+        x = joint_feat.mean(dim=1)
+
         x = self.text_head[0](x)               # [B, J, d]
         x = self.text_head[1](x)               # [B, J, d]
         x = x.flatten(-2)                      # [B, J*d]

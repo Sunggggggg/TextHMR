@@ -100,7 +100,7 @@ def main(args):
             loss_text = loss_cross_entropy(pred_text, gt_class)
 
             loss_total = loss_3d_pos + (args.lambda_scale * loss_3d_scale) + (args.lambda_3d_velocity * loss_3d_velocity)\
-                        + (args.lambda_text *loss_text)
+                        + (1. * loss_text)
 
             optimizer.zero_grad()           
             loss_total.backward()
@@ -110,7 +110,7 @@ def main(args):
             losses_3d_pos.update(loss_3d_pos, motion_2d.size(0))
             losses_3d_scale.update(args.lambda_scale * loss_3d_scale, motion_2d.size(0))
             losses_3d_velocity.update(args.lambda_3d_velocity * loss_3d_velocity, motion_2d.size(0))
-            losses_text.update(args.lambda_text *loss_text, motion_2d.size(0))
+            losses_text.update(args.lambda_text * loss_text, motion_2d.size(0))
 
             summary_string = f'({i + 1}/{args.epoch}) | {itr}/1000 | loss: {losses_total.avg:.2f} ' \
                                 f'| 3d: {losses_3d_pos.avg:.2f} | 3d_scale: {losses_3d_scale.avg:.2f} | 3d_vel: {losses_3d_velocity.avg:.2f} ' \
