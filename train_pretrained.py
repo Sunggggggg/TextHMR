@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--exp_name', type=str, default='pre_train')
     parser.add_argument('--exp_root', type=str, default='./pre_trained_experiment/')
     parser.add_argument('--data_root', type=str, default='/mnt/SKY/AMASS_proc/processed_16frames/')
-    parser.add_argument('--gpu', type=str, default=1)
+    parser.add_argument('--gpu', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
