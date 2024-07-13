@@ -53,7 +53,7 @@ def main(args):
         }
     num_motions = train_dataset.num_motions
     train_loader_3d = DataLoader(train_dataset, **trainloader_params)
-    print('Load dataset #of motion', num_motions)
+    print('Load dataset #of motion :', num_motions)
 
     ### Model
     model = Model(num_total_motion=num_motions)
@@ -62,6 +62,7 @@ def main(args):
     ### Optim
     net_params = sum(map(lambda x: x.numel(), model.parameters()))
     optimizer = torch.optim.AdamW(lr=0.0001, params=net_params, weight_decay=0.9)
+    print('Build model #of param. :', net_params)
 
     losses_total = AverageMeter()
     losses_3d_pos = AverageMeter()
@@ -72,7 +73,7 @@ def main(args):
     ### Train
     train_3d_iter = iter(train_loader_3d)
     model.train()
-    for i in range(args.epoch):
+    for i in tqdm(range(args.epoch)):
         try:
             target_3d = next(train_3d_iter)
         except StopIteration:
