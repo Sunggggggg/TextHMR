@@ -41,7 +41,6 @@ class STFormer(nn.Module):
         norm_layer = norm_layer or partial(nn.LayerNorm, eps=1e-6)
 
         self.joint_embed = nn.Linear(in_dim, embed_dim)
-        self.imgfeat_embed = nn.Linear(2048, embed_dim)
         self.spatial_pos_embed = nn.Parameter(torch.zeros(1, num_joints, embed_dim))
         self.temporal_pos_embed = nn.Parameter(torch.zeros(1, num_frames, embed_dim))
         self.pos_drop = nn.Dropout(p=drop_rate)
@@ -76,11 +75,10 @@ class STFormer(nn.Module):
         checkpoint = load_checkpoint(load_dir=pretrained)
         self.load_state_dict(checkpoint['model_state_dict'])
 
-    def SpaTemHead(self, x, img_feat):
+    def SpaTemHead(self, x):
         b, t, j, c = x.shape
         x = rearrange(x, 'b t j c  -> (b t) j c')
         x = self.joint_embed(x)
-        x = x + rearrange(self.imgfeat_embed(img_feat), 'b t c  -> (b t) 1 c')
         x += self.spatial_pos_embed
         x = self.pos_drop(x)
         spablock = self.SpatialBlocks[0]
@@ -95,9 +93,9 @@ class STFormer(nn.Module):
         x = self.norm_t(x)
         return x
 
-    def forward(self, x, img_feat, return_joint=True):
+    def forward(self, x, return_joint=False):
         b, t, j, c = x.shape
-        x = self.SpaTemHead(x, img_feat) # bj t c
+        x = self.SpaTemHead(x) # bj t c
         
         for i in range(1, self.depth):
             SpaAtten = self.SpatialBlocks[i]
