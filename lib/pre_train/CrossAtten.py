@@ -77,7 +77,7 @@ class Attention(nn.Module):
         if mask is not None:
             if attn.dim() == 4:
                 #mask = mask.unsqueeze(0).unsqueeze(0).expand_as(attn)
-                mask = mask.view(B, 1, N, 1).expand_as(attn)
+                mask = mask.unsqueeze(1).unsqueeze(1).expand_as(attn)
             attn.masked_fill_(mask, -float('inf'))
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
