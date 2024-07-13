@@ -138,6 +138,6 @@ class MotionDataset3D(MotionDataset):
         inp_text = torch.from_numpy(inp_text).float()
         caption_mask = torch.from_numpy(caption_mask).bool()
         motion_3d = torch.from_numpy(motion_3d).float()
-        gt_class = torch.from_numpy(gt_class)
+        gt_class = torch.from_numpy(gt_class).float()
         
         return (motion_2d, inp_text, caption_mask), (motion_3d, gt_class)

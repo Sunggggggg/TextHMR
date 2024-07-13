@@ -95,10 +95,10 @@ def main(args):
             loss_3d_pos = loss_mpjpe(pred_kp_3d, motion_3d)
             loss_3d_scale = n_mpjpe(pred_kp_3d, motion_3d)
             loss_3d_velocity = loss_velocity(pred_kp_3d, motion_3d)
-            loss_lv = loss_limb_var(pred_kp_3d)
-            loss_lg = loss_limb_gt(pred_kp_3d, motion_3d)
-            loss_a = loss_angle(pred_kp_3d, motion_3d)
-            loss_av = loss_angle_velocity(pred_kp_3d, motion_3d)
+            # loss_lv = loss_limb_var(pred_kp_3d)
+            # loss_lg = loss_limb_gt(pred_kp_3d, motion_3d)
+            # loss_a = loss_angle(pred_kp_3d, motion_3d)
+            # loss_av = loss_angle_velocity(pred_kp_3d, motion_3d)
             loss_text = loss_cross_entropy(pred_text, gt_class)
 
             loss_total = (args.lambda_3d_pose * loss_3d_pos) + (args.lambda_scale * loss_3d_scale) + (args.lambda_3d_velocity * loss_3d_velocity)\
@@ -127,10 +127,6 @@ def main(args):
                 }
                 filename = os.path.join(exp_dir, f'Epoch{i}_checkpoint.pth.tar')
                 torch.save(save_dict, filename)
-
-    
-    
-
 
 if __name__ == '__main__':
     args = parse_args()
