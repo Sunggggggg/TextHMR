@@ -27,6 +27,23 @@ class Model(nn.Module):
                                          nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Dropout()),
                                          nn.Linear(32*17, num_total_motion)])
 
+    def extraction_(self, pose_2d, text_emb, archive):
+        # Stage 1
+        joint_feat = self.st_fromer(pose_2d, return_joint=False)  # [B, T, J, dim] 
+        pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
+        pred_text = torch.argmax(pred_text, dim=-1)               # [B]
+        
+        # Padding
+        motion_text = archive[pred_text]
+        caption_len = 
+        caption_mask = 
+        
+        #
+        text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
+        joint_feat = self.co_former(joint_feat, text_feat, caption_mask)    # [B, T, J, dim]             
+
+        return joint_feat
+
     def text_prediction(self, joint_feat):
         """ Text predicting via joint features
         joint_feat : [B, T, J, dim]
