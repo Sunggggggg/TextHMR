@@ -85,6 +85,7 @@ def main(args):
             (motion_2d, inp_text, caption_mask), (motion_3d, gt_class) = target_3d
             motion_2d = motion_2d.cuda()
             inp_text = inp_text.cuda()
+            caption_mask = caption_mask.cuda()
             motion_3d = motion_3d.cuda()        # root relative
             gt_class = gt_class.cuda()
 
