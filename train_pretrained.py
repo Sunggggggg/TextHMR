@@ -39,6 +39,7 @@ def main(args):
     # 
     exp_dir = os.path.join(args.exp_root, args.exp_name)
     os.makedirs(exp_dir, exist_ok=True)
+    print('Make dir', exp_dir)
 
     ### Dataset
     train_dataset = MotionDataset3D(args, args.subset_list, 'train')
@@ -52,10 +53,11 @@ def main(args):
         }
     num_motions = train_dataset.num_motions
     train_loader_3d = DataLoader(train_dataset, **trainloader_params)
+    print('Load dataset #of motion', num_motions)
 
     ### Model
     model = Model(num_total_motion=num_motions)
-    model.to(args.gpu)
+    model.to('cuda')
     
     ### Optim
     net_params = sum(map(lambda x: x.numel(), model.parameters()))
