@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
-    parser.add_argument('--lambda_3d_pose', type=float, default=60.0)
+    parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
     parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)
     parser.add_argument('--lambda_scale', type=float, default=0.5)
     parser.add_argument('--lambda_text', type=float, default=1.0)
@@ -82,13 +82,13 @@ def main(args):
                 train_3d_iter = iter(train_loader_3d)
                 target_3d = next(train_3d_iter)
             
-            (motion_2d, inp_text), (motion_3d, gt_class) = target_3d
+            (motion_2d, inp_text, caption_mask), (motion_3d, gt_class) = target_3d
             motion_2d = motion_2d.cuda()
             inp_text = inp_text.cuda()
             motion_3d = motion_3d.cuda()        # root relative
             gt_class = gt_class.cuda()
 
-            pred_text, pred_kp_3d = model(motion_2d[..., :2], inp_text)
+            pred_text, pred_kp_3d = model(motion_2d[..., :2], inp_text, caption_mask)
             
             ### loss
             loss_3d_pos = loss_mpjpe(pred_kp_3d, motion_3d)

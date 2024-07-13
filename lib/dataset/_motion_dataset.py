@@ -101,7 +101,8 @@ class MotionDataset3D(MotionDataset):
         motion_3d = motion_file["data_label"]               # [243, 17, 3]
         if self.data_split=="train":
             if self.synthetic or self.gt_2d:
-                motion_3d = self.aug.augment3D(motion_3d)
+                #motion_3d = self.aug.augment3D(motion_3d)
+                motion_3d = crop_scale_3d(motion_3d, [0.8, 1.])
                 motion_2d = np.zeros(motion_3d.shape, dtype=np.float32)
                 motion_2d[:,:,:2] = motion_3d[:,:,:2]
                 motion_2d[:,:,2] = 1                        # No 2D detection, use GT xy and c=1.
@@ -125,6 +126,9 @@ class MotionDataset3D(MotionDataset):
         idx = np.unique(idx_list)
         text_feat = self.text_embeds[int(idx)][0]   # [1, N, 768]
         caption_len = text_feat.shape[0]
+        caption_mask = np.ones((self.max_len))
+        caption_mask[:caption_len] = 0.
+
         inp_text = np.concatenate([text_feat] + [np.zeros_like(text_feat[0:1]) for _ in range(self.max_len-caption_len)], axis=0)
 
         gt_class = np.zeros((self.num_motions))
@@ -132,7 +136,8 @@ class MotionDataset3D(MotionDataset):
 
         motion_2d = torch.from_numpy(motion_2d).float()
         inp_text = torch.from_numpy(inp_text).float()
+        caption_mask = torch.from_numpy(caption_mask).bool()
         motion_3d = torch.from_numpy(motion_3d).float()
         gt_class = torch.from_numpy(gt_class)
         
-        return (motion_2d, inp_text), (motion_3d, gt_class)
+        return (motion_2d, inp_text, caption_mask), (motion_3d, gt_class)

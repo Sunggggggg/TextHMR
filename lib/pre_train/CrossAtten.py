@@ -68,12 +68,16 @@ class Attention(nn.Module):
         self.proj = nn.Linear(dim, dim)
         self.proj_drop = nn.Dropout(proj_drop)
 
-    def forward(self, x):
+    def forward(self, x, mask=None):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]  
         
         attn = (q @ k.transpose(-2, -1)) * self.scale
+        if mask is not None:
+            if attn.dim() == 4:
+                mask = mask.unsqueeze(0).unsqueeze(0).expand_as(attn)
+            attn.masked_fill_(mask, -float('inf'))
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
@@ -93,8 +97,8 @@ class Block(nn.Module):
         self.norm2 = norm_layer(dim)
         self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
-    def forward(self, x):
-        x = x + self.drop_path(self.attn(self.norm1(x)))
+    def forward(self, x, mask=None):
+        x = x + self.drop_path(self.attn(self.norm1(x), mask))
         x = x + self.drop_path(self.mlp(self.norm2(x)))
         return x
 
@@ -132,12 +136,20 @@ class CoTransformer(nn.Module):
                   qk_scale=None, drop=0.1, attn_drop=0.1, drop_path=0.2, act_layer=nn.GELU, norm_layer=nn.LayerNorm)
         for _ in range(depth)])
 
-        self.norm = nn.LayerNorm(embed_dim) 
+        self.norm = nn.LayerNorm(embed_dim)
 
-    def forward(self, joint_feat, text_feat):
+    def get_attention_mask(self, caption_mask, joint_dim):
+        B = caption_mask.shape[0]
+        mask = torch.zeros((B, joint_dim), device=caption_mask.device) # [B, TJ]
+        atten_mask = torch.cat([mask, caption_mask], dim=-1)           # [B, TJ+N]
+
+        return atten_mask
+
+    def forward(self, joint_feat, text_feat, caption_mask):
         """
-        joint_feat : [B, T, J, dim]
-        text_feat : [B, N, dim]
+        joint_feat      : [B, T, J, dim]
+        text_feat       : [B, N, dim]
+        caption_mask    : [B, 36]
         """
         B, T, J, C = joint_feat.shape
         
@@ -148,9 +160,11 @@ class CoTransformer(nn.Module):
         joint_feat = joint_feat.reshape(B, T*J, C)
         text_feat = text_feat + self.text_pos_emb
 
+        atten_mask = self.get_attention_mask(caption_mask ,T*J)
+
         x = torch.cat([joint_feat, text_feat], dim=1)
         for blk in self.block:
-            x = blk(x)
+            x = blk(x, atten_mask)
 
         x = self.norm(x)
 
