@@ -21,9 +21,10 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
+    parser.add_argument('--lambda_3d_pose', type=float, default=60.0)
     parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)
     parser.add_argument('--lambda_scale', type=float, default=0.5)
-    parser.add_argument('--lambda_text', type=float, default=10.0)
+    parser.add_argument('--lambda_text', type=float, default=1.0)
 
     args = parser.parse_args()
     
@@ -99,15 +100,15 @@ def main(args):
             loss_av = loss_angle_velocity(pred_kp_3d, motion_3d)
             loss_text = loss_cross_entropy(pred_text, gt_class)
 
-            loss_total = loss_3d_pos + (args.lambda_scale * loss_3d_scale) + (args.lambda_3d_velocity * loss_3d_velocity)\
-                        + (1. * loss_text)
+            loss_total = (args.lambda_3d_pose * loss_3d_pos) + (args.lambda_scale * loss_3d_scale) + (args.lambda_3d_velocity * loss_3d_velocity)\
+                        + (args.lambda_text * loss_text)
 
             optimizer.zero_grad()           
             loss_total.backward()
             optimizer.step()
 
             losses_total.update(loss_total, motion_2d.size(0))
-            losses_3d_pos.update(loss_3d_pos, motion_2d.size(0))
+            losses_3d_pos.update(args.lambda_3d_pose * loss_3d_pos, motion_2d.size(0))
             losses_3d_scale.update(args.lambda_scale * loss_3d_scale, motion_2d.size(0))
             losses_3d_velocity.update(args.lambda_3d_velocity * loss_3d_velocity, motion_2d.size(0))
             losses_text.update(args.lambda_text * loss_text, motion_2d.size(0))

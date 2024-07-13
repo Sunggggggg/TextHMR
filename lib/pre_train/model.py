@@ -37,7 +37,7 @@ class Model(nn.Module):
         x = self.text_head[1](x)               # [B, J, d]
         x = x.flatten(-2)                      # [B, J*d]
         x = self.text_head[2](x)               # [B, num_total_motion]
-        x = F.softmax(x, dim=-1)
+        #x = F.softmax(x, dim=-1)
 
         return x
 
