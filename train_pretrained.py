@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from lib.pre_train.model import Model
 from lib.core.loss_pretrain import *
 from lib.dataset._motion_dataset import MotionDataset3D
-
+from lib.utils.utils import AverageMeter
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--exp_name', type=str, default='pre_train')
     parser.add_argument('--exp_root', type=str, default='./pre_trained_experiment/')
     parser.add_argument('--data_root', type=str, default='/mnt/SKY/AMASS_proc/processed_16frames/')
-    parser.add_argument('--gpu', type=str, default='1')
+    parser.add_argument('--gpu', type=str, default=1)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
@@ -61,6 +61,12 @@ def main(args):
     net_params = sum(map(lambda x: x.numel(), model.parameters()))
     optimizer = torch.optim.AdamW(lr=0.0001, params=net_params, weight_decay=0.9)
 
+    losses_total = AverageMeter()
+    losses_3d_pos = AverageMeter()
+    losses_3d_scale = AverageMeter()
+    losses_3d_velocity = AverageMeter()
+    losses_text = AverageMeter()
+
     ### Train
     train_3d_iter = iter(train_loader_3d)
     model.train()
@@ -90,11 +96,22 @@ def main(args):
         loss_text = loss_cross_entropy(pred_text, gt_class)
 
         loss_total = loss_3d_pos + (args.lambda_scale * loss_3d_scale) + (args.lambda_3d_velocity * loss_3d_velocity)\
-                        + (args.lambda_lv * loss_lv) + (args.lambda_text *loss_text)
+                     + (args.lambda_text *loss_text)
 
         optimizer.zero_grad()           
         loss_total.backward()
         optimizer.step()
+
+        losses_total.update(loss_total, motion_2d.size(0))
+        losses_3d_pos.update(loss_3d_pos, motion_2d.size(0))
+        losses_3d_scale.update(args.lambda_scale * loss_3d_scale, motion_2d.size(0))
+        losses_3d_velocity.update(args.lambda_3d_velocity * loss_3d_velocity, motion_2d.size(0))
+        losses_text.update(args.lambda_text *loss_text, motion_2d.size(0))
+
+        summary_string = f'({i + 1}/{args.epoch}) | loss: {losses_total.avg:.2f} ' \
+                             f'| 3d: {losses_3d_pos.avg:.2f} | 3d_scale: {losses_3d_scale.avg:.2f} | 3d_vel: {losses_3d_velocity.avg:.2f} ' \
+                             f'| text: {losses_text.avg:.2f} '
+        print(summary_string)
 
         if i % 5 == 0 :
             save_dict = {
