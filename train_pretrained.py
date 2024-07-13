@@ -61,7 +61,7 @@ def main(args):
     
     ### Optim
     net_params = sum(map(lambda x: x.numel(), model.parameters()))
-    optimizer = torch.optim.AdamW(lr=0.0001, params=net_params, weight_decay=0.9)
+    optimizer = torch.optim.AdamW(lr=0.0001, params=model.parameters(), weight_decay=0.9)
     print('Build model #of param. :', net_params)
 
     losses_total = AverageMeter()
