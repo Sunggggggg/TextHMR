@@ -123,7 +123,7 @@ class MotionDataset3D(MotionDataset):
 
         idx_list = [self.text_candidate.index(self.text_dic[subset][i]) for i in motion_text_range]
         idx = np.unique(idx_list)
-        text_feat = self.text_embeds[idx][0]   # [1, N, 768]
+        text_feat = self.text_embeds[int(idx)][0]   # [1, N, 768]
         caption_len = text_feat.shape[0]
         inp_text = np.concatenate([text_feat] + [np.zeros_like(text_feat[0:1]) for _ in range(self.max_len-caption_len)], axis=0)
 
