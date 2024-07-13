@@ -91,7 +91,7 @@ class MotionDataset3D(MotionDataset):
         self.aug = Augmenter3D(args)
         self.gt_2d = False
 
-        self.max_len = 16
+        self.max_len = 36
 
     def __getitem__(self, index):
         'Generates one sample of data'
