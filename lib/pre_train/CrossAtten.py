@@ -144,7 +144,7 @@ class CoTransformer(nn.Module):
         mask = torch.zeros((B, joint_dim), device=caption_mask.device) # [B, TJ]
         atten_mask = torch.cat([mask, caption_mask], dim=-1)           # [B, TJ+N]
 
-        return atten_mask
+        return atten_mask.bool()
 
     def forward(self, joint_feat, text_feat, caption_mask):
         """
