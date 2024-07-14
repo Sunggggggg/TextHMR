@@ -235,8 +235,8 @@ class Dataset3D(Dataset):
         input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
         
         # ViTpose
-        inp_vitpose = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d'])).float()   # [T, J, 3]
-        inp_vitpose = pose_processing(inp_vitpose[..., :2])
+        inp_vitpose = pose_processing(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
+        inp_vitpose = torch.from_numpy(inp_vitpose).float()
         
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)
 
