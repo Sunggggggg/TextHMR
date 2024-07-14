@@ -8,14 +8,16 @@ import torch
 import pprint
 import random
 import numpy as np
+
 import torch.backends.cudnn as cudnn
 from lib.core.config import parse_args
 from lib.utils.utils import prepare_output_dir, create_logger, get_optimizer
 from lib.dataset._loaders_only3d import get_data_loaders
 from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
-from lib.core.loss import Loss
-from lib.core.trainer_JRHMR import Trainer
+from lib.core.loss_TextHMR import Loss
+from lib.core.trainer_TextHMR import Trainer
+from lib.TextHMR.model import Model
 
 def main(cfg):
     if cfg.SEED_VALUE >= 0:
@@ -66,6 +68,7 @@ def main(cfg):
         weight_decay=cfg.TRAIN.GEN_WD,
         momentum=cfg.TRAIN.GEN_MOMENTUM,
     )
+    
     lr_scheduler = CosineAnnealingWarmupRestarts(
         gen_optimizer,
         first_cycle_steps = cfg.TRAIN.END_EPOCH,

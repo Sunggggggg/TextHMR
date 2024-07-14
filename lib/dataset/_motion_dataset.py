@@ -7,6 +7,22 @@ import pickle
 import torch
 from torch.utils.data import Dataset
 
+def crop_scale_2d(motion, scale_range=[1, 1]):
+    result = copy.deepcopy(motion)
+    xmin = np.min(motion[...,0])
+    xmax = np.max(motion[...,0])
+    ymin = np.min(motion[...,1])
+    ymax = np.max(motion[...,1])
+    ratio = np.random.uniform(low=scale_range[0], high=scale_range[1], size=1)[0]
+    scale = max(xmax-xmin, ymax-ymin) / ratio
+    if scale==0:
+        return np.zeros(motion.shape)
+    xs = (xmin+xmax-scale) / 2
+    ys = (ymin+ymax-scale) / 2
+    result[...,:2] = (motion[..., :2]- [xs,ys]) / scale
+    result = (result - 0.5) * 2
+    return result
+
 def crop_scale_3d(motion, scale_range=[1, 1]):
     '''
         Motion: [T, 17, 3]. (x, y, z)

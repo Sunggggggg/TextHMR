@@ -10,6 +10,7 @@ class Model(nn.Module):
     def __init__(self, num_total_motion) :
         super().__init__()
         self.mid_frame = 8
+        self.num_words = 36
         self.st_fromer = STFormer(num_frames=16, num_joints=17, embed_dim=256, depth=6, num_heads=8, mlp_ratio=4., 
                  qkv_bias=True, qk_scale=None, drop_rate=0.1, attn_drop_rate=0.1, drop_path_rate=0.2, norm_layer=None, pretrained=False)
         
@@ -27,17 +28,33 @@ class Model(nn.Module):
                                          nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Dropout()),
                                          nn.Linear(32*17, num_total_motion)])
 
-    def extraction_(self, pose_2d, text_emb, archive):
+    def extraction_features(self, pose_2d, text_embeds):
+        """
+        pose_2d         : [B, T, J, 2]
+        text_embeds     : [7693]
+        """
         # Stage 1
         joint_feat = self.st_fromer(pose_2d, return_joint=False)  # [B, T, J, dim] 
         pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
-        pred_text = torch.argmax(pred_text, dim=-1)               # [B]
+        max_pred_text = torch.argmax(pred_text, dim=-1)           # [B]
         
         # Padding
-        motion_text = archive[pred_text]
-        caption_len = 
-        caption_mask = 
-        
+        text_emb, caption_mask = [], []
+        for idx in max_pred_text:
+            motion_feat = text_embeds[idx][0]                  # [N, 768]
+            n = motion_feat.shape[1]
+            # Padding
+            motion_feat = torch.cat([motion_feat] + [torch.zeros_like(motion_feat[0:1]) for _ in range(self.num_words-n)], dim=0)
+            # 
+            mask = torch.ones((self.num_words), device=pose_2d.device)
+            mask[:n] = 0.
+
+            text_emb.append(motion_feat)
+            caption_mask.append(mask)                # n
+
+        text_emb = torch.stack(text_emb, dim=0).cuda()             # [B, N, 768]
+        caption_mask = torch.stack(caption_mask, dim=0).cuda()     # [B, N]
+
         #
         text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
         joint_feat = self.co_former(joint_feat, text_feat, caption_mask)    # [B, T, J, dim]             
