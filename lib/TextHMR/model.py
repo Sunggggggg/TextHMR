@@ -15,7 +15,9 @@ data_root = '/mnt/SKY/AMASS_proc/processed_16frames/'
 text_embeds = read_pkl(os.path.join(data_root, 'total_description_embedding.pkl'))
 
 class Model(nn.Module):
-    def __init__(self, num_total_motion) :
+    def __init__(self, 
+                 num_total_motion, 
+                 pretrained='/mnt/SKY/TextHMR/pre_trained_experiment/pre_train/Epoch95_checkpoint.pth.tar') :
         super().__init__()
         self.proj_img = nn.Linear(2048, 512)
         self.proj_joint = nn.Linear(256, 32)
@@ -25,12 +27,19 @@ class Model(nn.Module):
         self.pre_trained_model = pre_trained_model(num_total_motion)
         self.regressor = Regressor(512+32*17)
 
+        if pretrained :
+            pretrained_dict = torch.load(pretrained)['gen_state_dict']
+
+            self.pre_trained_model.load_state_dict(pretrained_dict)
+            print(f'=> loaded pretrained model from \'{pretrained}\'')
+    
     def forward(self, f_img, pose_2d, is_train=False, J_regressor=None):
         """
         pose_2d     : [B, T, J, 3]
         img_feat    : [B, T, 2048]
         """
         B, T = f_img.shape[:2]
+        pose_2d = pose_2d[..., :2]
 
         joint_feat = self.pre_trained_model.extraction_features(pose_2d, text_embeds)   # [B, T, J, dim]
         joint_feat = self.proj_joint(joint_feat)            # [B, T, J, 32]
