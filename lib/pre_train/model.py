@@ -41,7 +41,7 @@ class Model(nn.Module):
         # Padding
         text_emb, caption_mask = [], []
         for idx in max_pred_text:
-            motion_feat = text_embeds[idx][0]                  # [N, 768]
+            motion_feat = torch.tensor(text_embeds[idx][0])                  # [N, 768]
             n = motion_feat.shape[1]
             # Padding
             motion_feat = torch.cat([motion_feat] + [torch.zeros_like(motion_feat[0:1]) for _ in range(self.num_words-n)], dim=0)
