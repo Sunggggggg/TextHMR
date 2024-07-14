@@ -49,6 +49,12 @@ class Model(nn.Module):
         img_feat = self.temp_encoder(img_feat)
         f = torch.cat([joint_feat, img_feat], dim=-1)       # [B, T, 512+32*J]
 
+        if is_train:
+            f = f
+        else :
+            f = f[:, T//2 : T//2 + 1]
+
+
         smpl_output = self.regressor(f, is_train=is_train, J_regressor=J_regressor)
 
         scores = None
