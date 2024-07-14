@@ -51,10 +51,10 @@ coco2h36m = [
 ]
 
 def add_joint(pose2d):
-    pelvis = pose2d[:,:,[11,12],:2].mean(axis=1, keepdims=True)
-    neck = pose2d[:,:,[5,6],:2].mean(axis=1, keepdims=True)
+    pelvis = pose2d[:,[11,12],:2].mean(axis=1, keepdims=True)
+    neck = pose2d[:,[5,6],:2].mean(axis=1, keepdims=True)
     spin = (pelvis + neck) / 2
-    head_top = pose2d[:,:,[1,2],:2].mean(axis=1, keepdims=True)
+    head_top = pose2d[:,[1,2],:2].mean(axis=1, keepdims=True)
 
     return np.concatenate([pose2d, pelvis, neck, spin, head_top], axis=1)
 
