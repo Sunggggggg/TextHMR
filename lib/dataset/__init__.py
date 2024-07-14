@@ -1,5 +1,6 @@
 from ._dataset_2d import Dataset2D
-from ._dataset_3d import Dataset3D
+#from ._dataset_3d import Dataset3D
+from ._dataset_motion_3d import Dataset3D
 
 from .insta import Insta
 from .amass import AMASS
