@@ -11,7 +11,7 @@ import numpy as np
 import torch.backends.cudnn as cudnn
 from lib.core.config import parse_args
 from lib.utils.utils import prepare_output_dir, create_logger, get_optimizer
-from lib.dataset._loaders_only3d import get_data_loaders
+from lib.dataset._loaders import get_data_loaders
 from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
 from lib.core.loss import GLoTLoss
