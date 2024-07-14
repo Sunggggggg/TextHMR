@@ -62,7 +62,7 @@ def pose_processing(joint_2d):
     """
     joint_2d : [T, J, 2]
     """
-    joint_2d = add_joint(joint_2d)
+    joint_2d = add_joint(joint_2d[..., :2])
 
     h36m_joint = np.zeros((joint_2d.shape[0], 17, 2))
     for idx, j_idx in enumerate(coco2h36m) :
