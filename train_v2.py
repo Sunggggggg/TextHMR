@@ -55,7 +55,7 @@ def main(cfg):
     )
 
     # ========= Model ========= #
-    model = Model().to(cfg.DEVICE)
+    model = Model(7693).to(cfg.DEVICE)
     logger.info(f'net: {model}')
 
     # ========= Optimizer, Scheduler ========= #
