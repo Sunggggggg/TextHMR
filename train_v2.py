@@ -17,7 +17,7 @@ from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
 from lib.core.loss_TextHMR import Loss
 from lib.core.trainer_TextHMR import Trainer
-from lib.TextHMR.model import Model
+from lib.TextHMR.model_v2 import Model
 
 def main(cfg):
     if cfg.SEED_VALUE >= 0:

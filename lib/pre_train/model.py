@@ -28,7 +28,7 @@ class Model(nn.Module):
                                          nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Dropout()),
                                          nn.Linear(32*17, num_total_motion)])
 
-    def extraction_features(self, pose_2d, text_embeds):
+    def extraction_features(self, pose_2d, text_embeds, return_joint=False):
         """
         pose_2d         : [B, T, J, 2]
         text_embeds     : [7693]
@@ -58,8 +58,11 @@ class Model(nn.Module):
         #
         text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
         joint_feat = self.co_former(joint_feat, text_feat, caption_mask)    # [B, T, J, dim]             
-
-        return joint_feat
+        if return_joint :
+            pred_kp_3d = self.joint_head(joint_feat)                  # [B, T, J, 3] 
+            return pred_kp_3d
+        else :
+            return joint_feat
 
     def text_prediction(self, joint_feat):
         """ Text predicting via joint features
