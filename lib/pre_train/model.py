@@ -52,8 +52,8 @@ class Model(nn.Module):
             text_emb.append(motion_feat)
             caption_mask.append(mask)                # n
 
-        text_emb = torch.stack(text_emb, dim=0).cuda()             # [B, N, 768]
-        caption_mask = torch.stack(caption_mask, dim=0).cuda()     # [B, N]
+        text_emb = torch.stack(text_emb, dim=0).float().cuda()             # [B, N, 768]
+        caption_mask = torch.stack(caption_mask, dim=0).bool().cuda()     # [B, N]
 
         #
         text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
