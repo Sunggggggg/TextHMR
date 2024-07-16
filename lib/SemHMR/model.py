@@ -1,8 +1,6 @@
 import os
 import torch
 import torch.nn as nn
-from lib.core.config import BASE_DATA_DIR
-
 import lib.SemHMR.temporal_encoder as temporal_encoder
 import lib.SemHMR.text_encoder as text_encoder
 import lib.SemHMR.highlight as highlight
