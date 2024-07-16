@@ -676,22 +676,10 @@ class GLoTLoss(nn.Module):
             T, N = map.shape
             losses = []
             vec_tar = map[T//2] / torch.norm(map[T//2], p=2)
-            for t in range(T) :
+            for t in range(T-1, T+2) :
                 if t != T//2 :
                     vec_src = map[t] / torch.norm(map[t], p=2)
                     losses.append(1. - (vec_src @ vec_tar))
             losses = torch.stack(losses)
             loss += losses.mean()
-        return loss
-    
-    def information_losses(self, score_map):
-        """
-        score_map : [B, T, N]
-        """
-        B, T, N = score_map.shape
-        mid_frame = score_map[:, T//2:T//2+1]
-        adj_idx = (T//2-1, T//2+1)
-        adj_frame = torch.cat([score_map[:, adj_idx]] ,dim=1)
-
-        loss = self.criterion_semantic(adj_frame.log(), mid_frame).mean()
         return loss
