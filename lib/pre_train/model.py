@@ -12,7 +12,7 @@ class Model(nn.Module):
         self.mid_frame = 8
         self.num_words = 36
         self.seqlen = 80
-        self.st_fromer = STFormer(num_frames=self.seqlen, num_joints=17, embed_dim=256, depth=6, num_heads=8, mlp_ratio=4., 
+        self.st_fromer = STFormer(num_frames=self.seqlen, num_joints=17, embed_dim=256, depth=4, num_heads=8, mlp_ratio=4., 
                  qkv_bias=True, qk_scale=None, drop_rate=0.1, attn_drop_rate=0.1, drop_path_rate=0.2, norm_layer=None, pretrained=False)
         
         self.text_encoder = TEncoder(depth=3, embed_dim=256, mlp_hidden_dim=256*4.,
