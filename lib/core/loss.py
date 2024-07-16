@@ -461,7 +461,7 @@ class GLoTLoss(nn.Module):
             loss_dict['loss_shape_short'] = loss_shape_short
         
         if index_map is not None :
-            loss_global_semantic = self.information_losses(index_map) * 60.
+            loss_global_semantic = self.index_losses(index_map) * 60.
             #loss_global_semantic = index_map * 600.
             loss_dict['loss_global_semantic'] = loss_global_semantic
             
