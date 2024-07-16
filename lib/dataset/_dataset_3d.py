@@ -24,6 +24,7 @@ import joblib
 
 from torch.utils.data import Dataset
 from lib.core.config import GLoT_DB_DIR
+from lib.dataset._dataset_motion_3d import pose_processing
 from lib.data_utils._kp_utils import convert_kps
 from lib.data_utils._img_utils import normalize_2d_kp, transfrom_keypoints, split_into_chunks, get_single_image_crop
 
@@ -247,8 +248,11 @@ class Dataset3D(Dataset):
 
         bbox = self.get_sequence(start_index, end_index, self.db['bbox'])
         input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
-        inp_vitpose = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d'])).float()
         
+        # ViTpose
+        inp_vitpose = pose_processing(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
+        inp_vitpose = torch.from_numpy(inp_vitpose).float()
+
         # Text embedding 
         img_names = self.get_sequence(start_index, end_index, self.db['img_name'])  # ./data/3dpw ...
         inp_text, caption_len = self.load_text_emb(img_names[8])
