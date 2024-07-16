@@ -62,14 +62,14 @@ class Highlighter(nn.Module):
         matrix = matrix.softmax(dim=-1)                     # [B, T, N]
 
         idx_list = torch.sort(matrix, dim=-1, descending=True).indices  # [B, T, N]
-        selection = torch.gather(matrix, dim=-1, index=idx_list[..., :self.num_select]) # [B, T, self.num_select]
+        #selection = torch.gather(matrix, dim=-1, index=idx_list[..., :self.num_select]) # [B, T, self.num_select]
 
         text_embed_selection = []
         for b, idx in enumerate(idx_list[:, T//2]):
             text_embed_selection.append(text_feat[b, idx[:4]])
         text_embed_selection = torch.stack(text_embed_selection, dim=0)
 
-        return text_embed_selection, selection
+        return text_embed_selection, matrix
 
 def get_model(embed_dim=512):
     model = Highlighter(embed_dim=embed_dim)
