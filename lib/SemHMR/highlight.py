@@ -68,8 +68,8 @@ class Highlighter(nn.Module):
         for b, idx in enumerate(mid_frame_idx_list):
             text_embed_selection.append(text_embed[b, idx])
         text_embed_selection = torch.stack(text_embed_selection, dim=0)
+        text_embed_selection = text_embed_selection[:, :self.num_select]
         
-
         return text_embed_selection, idx_list
 
 def get_model(embed_dim=512):
