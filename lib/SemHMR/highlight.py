@@ -61,14 +61,15 @@ class Highlighter(nn.Module):
         matrix.masked_fill_(mask, -float('inf'))
         matrix = matrix.softmax(dim=-1)                     # [B, T, N]
 
-        idx_list = torch.sort(matrix, dim=-1, descending=True).indices  # [B, T, N]
-        mid_frame_idx_list = idx_list[:, T//2]          # [B, N]
-        
-        text_embed_selection = []
-        for b, idx in enumerate(mid_frame_idx_list):
-            text_embed_selection.append(text_embed[b, idx])
-        text_embed_selection = torch.stack(text_embed_selection, dim=0)
-        text_embed_selection = text_embed_selection[:, :self.num_select]
+        with torch.no_grad():
+            idx_list = torch.sort(matrix, dim=-1, descending=True).indices  # [B, T, N]
+            mid_frame_idx_list = idx_list[:, T//2]          # [B, N]
+            
+            text_embed_selection = []
+            for b, idx in enumerate(mid_frame_idx_list):
+                text_embed_selection.append(text_embed[b, idx])
+            text_embed_selection = torch.stack(text_embed_selection, dim=0)
+            text_embed_selection = text_embed_selection[:, :self.num_select]
         
         return text_embed_selection, matrix
 
