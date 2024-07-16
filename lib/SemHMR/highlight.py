@@ -70,7 +70,7 @@ class Highlighter(nn.Module):
         text_embed_selection = torch.stack(text_embed_selection, dim=0)
         text_embed_selection = text_embed_selection[:, :self.num_select]
         
-        return text_embed_selection, idx_list
+        return text_embed_selection, matrix
 
 def get_model(embed_dim=512):
     model = Highlighter(embed_dim=embed_dim)
