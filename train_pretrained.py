@@ -14,13 +14,14 @@ from lib.utils.utils import AverageMeter
 def parse_args():
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('--exp_name', type=str, default='pre_train')
+    parser.add_argument('--exp_name', type=str)
+    parser.add_argument('--data_root', type=str, default='/mnt/SKY/AMASS_proc/processed_80frames_coco/')
     parser.add_argument('--exp_root', type=str, default='./pre_trained_experiment/')
-    parser.add_argument('--data_root', type=str, default='/mnt/SKY/AMASS_proc/processed_16frames/')
     parser.add_argument('--gpu', type=str, default='1')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=100)
-    parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
+    parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT'])
+    #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
     parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
     parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)
     parser.add_argument('--lambda_scale', type=float, default=0.5)
