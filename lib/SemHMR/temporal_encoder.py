@@ -26,8 +26,8 @@ class THMR(nn.Module):
         self.out_proj = nn.Linear(embed_dim, 2048)
 
         self.regressor = Regressor()
-        #if pretrained and os.path.isfile(pretrained):
-        if False :
+        if pretrained and os.path.isfile(pretrained):
+        #if False :
             pretrained_dict = torch.load(pretrained)['model']
 
             self.regressor.load_state_dict(pretrained_dict, strict=False)

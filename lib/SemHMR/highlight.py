@@ -21,11 +21,25 @@ def softmax_with_temperature(x, beta=0.02, d=1):
 class Highlighter(nn.Module):
     def __init__(self, embed_dim=512):
         super().__init__()
+        self.num_words = 36
         self.num_select = 4
         self.proj_unbaised1 = nn.Linear(embed_dim, embed_dim)
         self.proj_unbaised2 = nn.Linear(embed_dim, embed_dim)
         self.proj_unbaised3 = nn.Linear(embed_dim, embed_dim)
     
+    def atten_mask(self, caption_len):
+        """
+        caption_len : [B]
+        atten_mask : [B, N]
+        """
+        atten_mask = []
+        for mask_len in caption_len :
+            mask = torch.ones(self.num_words, device=caption_len.device)
+            mask[:mask_len] = 0.
+            atten_mask.append(mask.bool())
+        atten_mask = torch.stack(atten_mask, dim=0)
+        return atten_mask
+
     def forward(self, temp_feat, text_embed, caption_len):
         """
         temp_feat       : [B, T, dim]
@@ -37,31 +51,26 @@ class Highlighter(nn.Module):
         loss
         """
         B, T = temp_feat.shape[:2]
-        #img_feat = self.proj_unbaised1(temp_feat)           # One-hot vector
-        #text_feat = self.proj_unbaised2(text_embed)
+        img_feat = self.proj_unbaised1(temp_feat)           # One-hot vector
+        text_feat = self.proj_unbaised2(text_embed)
 
         matrix = img_feat @ text_feat.permute(0, 2, 1)      # [B, T, N]
+        
+        mask = self.atten_mask(caption_len)                 # [B, N]
+        mask = mask.unsqueeze(1).expand_as(matrix)
+        matrix.masked_fill_(mask, -float('inf'))
+        matrix = matrix.softmax(dim=-1)                     # [B, T, N]
 
-        batch_matrixs = []
-        selected_text_embeds = []
-        for b in range(B) :
-            # Remove padding
-            batch_matrix = matrix[b, :, :caption_len[b]]              # [T, n]
-            norm_matrix = normalization(batch_matrix)                 # 
-            
-            # Selection
-            mid_frame = norm_matrix[T//2] 
-            _, indices = torch.sort(mid_frame, dim=-1, descending=True)         # [n]
-            batch_text_embed = text_embed[b, :caption_len[b]]                   # [n, dim]
-            selected_text_embed = batch_text_embed[indices[:self.num_select]]   # [4, dim]
-            selected_text_embeds.append(selected_text_embed)
+        idx_list = torch.sort(matrix, dim=-1, descending=True).indices  # [B, T, N]
+        selection = torch.gather(matrix, dim=-1, index=idx_list[..., :self.num_select]) # [B, T, self.num_select]
 
-            # Loss
-            batch_matrixs.append(batch_matrix)
+        text_embed_selection = []
+        for b, idx in idx_list[:, T//2]:
+            text_embed_selection.append(text_feat[b, idx[:4]])
+        text_embed_selection = torch.stack(text_embed_selection, dim=0)
 
-        selected_text_embeds = torch.stack(selected_text_embeds, dim=0)         # [B, n, dim]
-        return selected_text_embeds, batch_matrixs
-     
+        return text_embed_selection, selection
+
 def get_model(embed_dim=512):
     model = Highlighter(embed_dim=embed_dim)
     return model

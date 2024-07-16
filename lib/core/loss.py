@@ -406,6 +406,7 @@ class GLoTLoss(nn.Module):
         self.criterion_accel = nn.MSELoss('none').to(self.device)
         self.criterion_attention = nn.CrossEntropyLoss()
         self.criterion_index = nn.MSELoss().to(self.device)
+        self.criterion_semantic = nn.KLDivLoss().to(self.device)
 
     def forward(
             self,
@@ -460,7 +461,7 @@ class GLoTLoss(nn.Module):
             loss_dict['loss_shape_short'] = loss_shape_short
         
         if index_map is not None :
-            loss_global_semantic = self.index_losses(index_map) * 60.
+            loss_global_semantic = self.information_losses(index_map) * 60.
             #loss_global_semantic = index_map * 600.
             loss_dict['loss_global_semantic'] = loss_global_semantic
             
@@ -681,4 +682,16 @@ class GLoTLoss(nn.Module):
                     losses.append(1. - (vec_src @ vec_tar))
             losses = torch.stack(losses)
             loss += losses.mean()
+        return loss
+    
+    def information_losses(self, score_map):
+        """
+        score_map : [B, T, N]
+        """
+        B, T, N = score_map.shape
+        mid_frame = score_map[:, T//2:T//2+1]
+        adj_idx = (T//2-1, T//2+1)
+        adj_frame = torch.cat([score_map[:, adj_idx]] ,dim=1)
+
+        loss = self.criterion_semantic(adj_frame.log(), mid_frame).mean()
         return loss
