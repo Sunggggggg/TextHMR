@@ -86,7 +86,7 @@ class MotionDataset(Dataset):
             for i in motion_list:
                 file_list_all.append(os.path.join(data_path, i))                # /mnt/SKY/AMASS_proc/processed/KIT/train/0000.pkl
 
-            dec_path = os.path.join(self.data_root, subset, 'amass_joints_h36m_60.pkl')
+            dec_path = os.path.join(self.data_root, subset, 'amass_joints_coco_60.pkl')
             text_dic[subset] = read_pkl(dec_path)['all_description']
         
         self.file_list = file_list_all
