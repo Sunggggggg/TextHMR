@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument('--gpu', type=str, default='1')
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epoch', type=int, default=100)
-    parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT'])
+    parser.add_argument('--subset_list', type=list, default=['HUMAN4D'])
     #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
     parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
     parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)
@@ -132,4 +132,5 @@ def main(args):
 if __name__ == '__main__':
     args = parse_args()
     set_random_seed(123)
+
     main(args)

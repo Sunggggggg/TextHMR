@@ -46,7 +46,6 @@ class Model(nn.Module):
             n = motion_feat.shape[0]
             # Padding
             motion_feat = torch.cat([motion_feat] + [torch.zeros_like(motion_feat[0:1]) for _ in range(self.num_words-n)], dim=0)
-            # 
             mask = torch.ones((self.num_words), device=pose_2d.device)
             mask[:n] = 0.
 
