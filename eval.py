@@ -18,7 +18,7 @@ from lib.utils.eval_utils import compute_accel, compute_error_accel, batch_compu
 from lib.utils.slerp_filter_utils import quaternion_from_matrix, quaternion_slerp, quaternion_matrix
 from lib.utils.renderer import Renderer
 
-from lib.models.model_v1 import Model
+from lib.TextHMR.model_v2 import Model
 
 def get_sequence(start_index, end_index, seqlen=16):
     if end_index - start_index + 1 == seqlen:
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     if target_dataset == '3dpw':
         data_path = f'/mnt/SKY/V_HMR/data/preprocessed_data/FullFrame_vitpose_r5064/{target_dataset}_{set}_db_clip.pt'
-        caption_path = f'/mnt/SKY/V_HMR/data/preprocessed_data/Video_caption/{target_dataset}_train_caption.pt'
+        #caption_path = f'/mnt/SKY/V_HMR/data/preprocessed_data/Video_caption/{target_dataset}_train_caption.pt'
     elif target_dataset == 'h36m':
         if cfg.TITLE == 'repr_table4_h36m_mpii3d_model':
             data_path = f'/mnt/SKY/preprocessed_data/{target_dataset}_{set}_25fps_db_clip.pt'  # Table 4
@@ -130,8 +130,8 @@ if __name__ == "__main__":
     print(f"Load data from {data_path}")
     dataset_data = joblib.load(data_path)
 
-    print(f"Load caption from {caption_path}")
-    caption_data = joblib.load(caption_path)
+    #print(f"Load caption from {caption_path}")
+    #caption_data = joblib.load(caption_path)
 
     full_res = defaultdict(list)
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
         for seq_name in pbar:
             curr_feats = dataset_data[seq_name]['features']         # 
             curr_vitposes = dataset_data[seq_name]['vitpose_j2d']
-            curr_text_feats = caption_data[seq_name[:-2]]
+            #curr_text_feats = caption_data[seq_name[:-2]]
 
             res_save = {}
             curr_feat = torch.tensor(curr_feats).to(device)
@@ -201,25 +201,25 @@ if __name__ == "__main__":
                         mid_seq_select = seq_select[8]
 
                         img_name = 'image_{0:05d}.jpg'.format(mid_seq_select)
-                        curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)  
+                        #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)  
                         input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
                         input_vitpose.append(curr_vitpose[None, seq_select, :]) # [1, 16, 17, 2]
-                        input_text.append(curr_text[None, ...])                 # [1, 1, 512]
+                        #input_text.append(curr_text[None, ...])                 # [1, 1, 512]
                 else:
                     for ii in range(curr_idx, len(chunk_idxes)):
                         seq_select = get_sequence(chunk_idxes[ii][0], chunk_idxes[ii][1])
                         mid_seq_select = seq_select[8]
 
                         img_name = 'image_{0:05d}.jpg'.format(mid_seq_select)
-                        curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)
+                        #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)
                         input_feat.append(curr_feat[None, seq_select, :])
                         input_vitpose.append(curr_vitpose[None, seq_select, :])
-                        input_text.append(curr_text[None, ...])
+                        #input_text.append(curr_text[None, ...])
 
                 input_feat = torch.cat(input_feat, dim=0)
                 input_vitpose = torch.cat(input_vitpose, dim=0)
-                input_text = torch.cat(input_text, dim=0)
-                pose3d, preds, joint_guide = model(input_text, input_feat, input_vitpose, J_regressor=J_regressor, is_train=False)
+                #input_text = torch.cat(input_text, dim=0)
+                preds, pose_3d = model(input_text, input_feat, input_vitpose, J_regressor=J_regressor, is_train=False)
 
                 n_kp = preds[-1]['kp_3d'].shape[-2]
                 pred_j3d = preds[-1]['kp_3d'].view(-1, n_kp, 3).cpu().numpy()
