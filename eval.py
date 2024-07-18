@@ -111,7 +111,7 @@ if __name__ == "__main__":
     J_regressor = torch.from_numpy(np.load(osp.join(BASE_DATA_DIR, 'J_regressor_h36m.npy'))).float()
 
     """ Data """
-    seqlen = 16
+    seqlen = 64
     stride = 1  # seqlen
     out_dir = f'./output/{target_dataset}_test_output' # your path
     Path(out_dir).mkdir(parents=True, exist_ok=True)
@@ -195,16 +195,14 @@ if __name__ == "__main__":
                 continue
 
             pred_j3ds, pred_verts, pred_rotmats, pred_thetas, scores = [], [], [], [], []
-            for curr_idx in range(0, len(chunk_idxes), 8):
+            for curr_idx in range(0, len(chunk_idxes), seqlen//2):
                 input_feat = []
                 input_vitpose = []
                 input_text = []
-                if (curr_idx + 8) < len(chunk_idxes):
-                    for ii in range(8):
+                if (curr_idx + seqlen//2) < len(chunk_idxes):
+                    for ii in range(seqlen//2):
                         seq_select = get_sequence(chunk_idxes[curr_idx+ii][0], chunk_idxes[curr_idx+ii][1])
-                        mid_seq_select = seq_select[8]
 
-                        img_name = 'image_{0:05d}.jpg'.format(mid_seq_select)
                         #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)  
                         input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
                         input_vitpose.append(curr_vitpose[None, seq_select, :]) # [1, 16, 17, 2]
@@ -212,9 +210,7 @@ if __name__ == "__main__":
                 else:
                     for ii in range(curr_idx, len(chunk_idxes)):
                         seq_select = get_sequence(chunk_idxes[ii][0], chunk_idxes[ii][1])
-                        mid_seq_select = seq_select[8]
 
-                        img_name = 'image_{0:05d}.jpg'.format(mid_seq_select)
                         #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)
                         input_feat.append(curr_feat[None, seq_select, :])
                         input_vitpose.append(curr_vitpose[None, seq_select, :])
