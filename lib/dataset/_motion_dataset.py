@@ -148,8 +148,8 @@ class MotionDataset3D(MotionDataset):
         inp_text = np.concatenate([text_feat] + [np.zeros_like(text_feat[0:1]) for _ in range(self.max_len-caption_len)], axis=0)
 
         # 
-        gt_class = np.zeros((self.num_motions))
-        gt_class[idx] = 1.
+        #gt_class = np.zeros((self.num_motions))
+        gt_class = idx
 
         motion_2d = torch.from_numpy(motion_2d).float()
         inp_text = torch.from_numpy(inp_text).float()
