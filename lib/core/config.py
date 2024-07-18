@@ -86,6 +86,12 @@ cfg.LOSS.vel_or_accel_2d_weight = 50.
 cfg.LOSS.vel_or_accel_3d_weight = 100.
 cfg.LOSS.use_accel = True
 
+# <====== Text moudle
+cfg.TEXT = CN()
+cfg.TEXT.data_root = ''
+cfg.TEXT.PRETRAINED = ''
+
+
             
 def get_cfg_defaults():
     """Get a yacs CfgNode object with default values for my_project."""

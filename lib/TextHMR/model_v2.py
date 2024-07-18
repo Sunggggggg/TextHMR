@@ -16,9 +16,12 @@ text_embeds = read_pkl(os.path.join(data_root, 'total_description_embedding.pkl'
 
 class Model(nn.Module):
     def __init__(self, 
-                 num_total_motion, 
-                 pretrained='/mnt/SKY/TextHMR/pre_trained_experiment/pre_train/Epoch95_checkpoint.pth.tar') :
+                 num_total_motion,
+                 text_archive,
+                 pretrained) :
         super().__init__()
+        self.text_archive = text_archive
+
         self.proj_img = nn.Linear(2048, 512)
         self.proj_joint = nn.Linear(3, 32)
 
@@ -41,7 +44,7 @@ class Model(nn.Module):
         B, T = f_img.shape[:2]
         pose_2d = pose_2d[..., :2]
 
-        joint_feat = self.pre_trained_model.extraction_features(pose_2d, text_embeds, return_joint=True)   # [B, T, J, 3]
+        joint_feat = self.pre_trained_model.extraction_features(pose_2d, self.text_archive, return_joint=True)   # [B, T, J, 3]
         joint_feat = self.proj_joint(joint_feat)            # [B, T, J, 32]
         joint_feat = joint_feat.flatten(-2)                 # [B, T, 32*J]
 

@@ -8,8 +8,10 @@ import torch
 import pprint
 import random
 import numpy as np
+import pandas as pd
 
 import torch.backends.cudnn as cudnn
+from lib.dataset._motion_dataset import read_pkl
 from lib.core.config import parse_args
 from lib.utils.utils import prepare_output_dir, create_logger, get_optimizer
 from lib.dataset._loaders_only3d import get_data_loaders
@@ -44,6 +46,12 @@ def main(cfg):
     # ========= Dataloaders ========= #
     data_loaders = get_data_loaders(cfg)
 
+    # ========= Textloader ========= #
+    text_candidate = pd.read_csv(os.path.join(cfg.TEXT.data_root, 'total_description.csv'), header=None)
+    text_candidate = list(text_candidate[0][1:])
+    text_embeds = read_pkl(os.path.join(cfg.TEXT.data_root, 'total_description_embedding.pkl'))
+    num_motion = len(text_embeds)
+
     # ========= Compile Loss ========= #
     loss = Loss(
         e_loss_weight=cfg.LOSS.KP_2D_W,
@@ -55,7 +63,7 @@ def main(cfg):
     )
 
     # ========= Model ========= #
-    model = Model(7692).to(cfg.DEVICE)
+    model = Model(num_motion, text_embeds, cfg.TEXT.PRETRAINED).to(cfg.DEVICE)
     logger.info(f'net: {model}')
 
     # ========= Optimizer, Scheduler ========= #
