@@ -8,12 +8,6 @@ from .transformer import Transformer
 from lib.dataset._motion_dataset import read_pkl
 from lib.pre_train.model import Model as pre_trained_model
 
-# ========= Text embedding ========= #
-data_root = '/mnt/SKY/AMASS_proc/processed_16frames/'
-# text_candidate = pd.read_csv(os.path.join(data_root, 'total_description.csv'), header=None)
-# text_candidate = list(text_candidate[0][1:])
-text_embeds = read_pkl(os.path.join(data_root, 'total_description_embedding.pkl'))
-
 class Model(nn.Module):
     def __init__(self, 
                  num_total_motion,
@@ -23,12 +17,12 @@ class Model(nn.Module):
         self.text_archive = text_archive
 
         self.proj_img = nn.Linear(2048, 512)
-        self.proj_joint = nn.Linear(3, 32)
+        self.proj_joint = nn.Linear(3, 256)
 
         self.temp_encoder = Transformer(depth=3, embed_dim=512, mlp_hidden_dim=1024, 
                                         h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=16)
         self.pre_trained_model = pre_trained_model(num_total_motion)
-        self.regressor = Regressor(512+32*17)
+        self.regressor = Regressor(512+256*17)
 
         if pretrained :
             pretrained_dict = torch.load(pretrained)['gen_state_dict']
@@ -44,8 +38,8 @@ class Model(nn.Module):
         B, T = f_img.shape[:2]
         pose_2d = pose_2d[..., :2]
 
-        joint_feat = self.pre_trained_model.extraction_features(pose_2d, self.text_archive, return_joint=True)   # [B, T, J, 3]
-        joint_feat = self.proj_joint(joint_feat)            # [B, T, J, 32]
+        pose_3d = self.pre_trained_model.extraction_features(pose_2d, self.text_archive, return_joint=True)   # [B, T, J, 3]
+        joint_feat = self.proj_joint(pose_3d)               # [B, T, J, 256]
         joint_feat = joint_feat.flatten(-2)                 # [B, T, 32*J]
 
         img_feat = self.proj_img(f_img)
@@ -56,7 +50,6 @@ class Model(nn.Module):
             f = f
         else :
             f = f[:, T//2 : T//2 + 1]
-
 
         smpl_output = self.regressor(f, is_train=is_train, J_regressor=J_regressor)
 
@@ -80,4 +73,4 @@ class Model(nn.Module):
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
                 s['scores'] = scores
 
-        return smpl_output
+        return smpl_output, pose_3d

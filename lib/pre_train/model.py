@@ -52,14 +52,14 @@ class Model(nn.Module):
             text_emb.append(motion_feat)
             caption_mask.append(mask)                # n
 
-        text_emb = torch.stack(text_emb, dim=0).float().cuda()             # [B, N, 768]
-        caption_mask = torch.stack(caption_mask, dim=0).bool().cuda()     # [B, N]
+        text_emb = torch.stack(text_emb, dim=0).float().cuda()              # [B, N, 768]
+        caption_mask = torch.stack(caption_mask, dim=0).bool().cuda()       # [B, N]
 
         #
         text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
         joint_feat = self.co_former(joint_feat, text_feat, caption_mask)    # [B, T, J, dim]             
         if return_joint :
-            pred_kp_3d = self.joint_head(joint_feat)                  # [B, T, J, 3] 
+            pred_kp_3d = self.joint_head(joint_feat)                        # [B, T, J, 3] 
             return pred_kp_3d
         else :
             return joint_feat

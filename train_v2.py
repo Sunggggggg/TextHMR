@@ -47,8 +47,6 @@ def main(cfg):
     data_loaders = get_data_loaders(cfg)
 
     # ========= Textloader ========= #
-    text_candidate = pd.read_csv(os.path.join(cfg.TEXT.data_root, 'total_description.csv'), header=None)
-    text_candidate = list(text_candidate[0][1:])
     text_embeds = read_pkl(os.path.join(cfg.TEXT.data_root, 'total_description_embedding.pkl'))
     num_motion = len(text_embeds)
 
