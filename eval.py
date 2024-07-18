@@ -199,22 +199,22 @@ if __name__ == "__main__":
                 input_feat = []
                 input_vitpose = []
                 input_text = []
+
                 if (curr_idx + 8) < len(chunk_idxes):
                     for ii in range(8):
                         seq_select = get_sequence(chunk_idxes[curr_idx+ii][0], chunk_idxes[curr_idx+ii][1])
-                        print(seq_select)
-                        #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)  
-                        input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
-                        input_vitpose.append(curr_vitpose[None, seq_select, :]) # [1, 16, 17, 2]
-                        #input_text.append(curr_text[None, ...])                 # [1, 1, 512]
+                        if (seq_select[-1] - seq_select[0]) == (seqlen-1):
+                            input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
+                            input_vitpose.append(curr_vitpose[None, seq_select, :]) # [1, 16, 17, 2]
                 else:
                     for ii in range(curr_idx, len(chunk_idxes)):
                         seq_select = get_sequence(chunk_idxes[ii][0], chunk_idxes[ii][1])
-
-                        #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)
-                        input_feat.append(curr_feat[None, seq_select, :])
-                        input_vitpose.append(curr_vitpose[None, seq_select, :])
-                        #input_text.append(curr_text[None, ...])
+                        if (seq_select[-1] - seq_select[0]) == (seqlen-1):
+                            input_feat.append(curr_feat[None, seq_select, :])
+                            input_vitpose.append(curr_vitpose[None, seq_select, :])
+                
+                if input_feat == [] and input_vitpose == []:
+                    continue
 
                 input_feat = torch.cat(input_feat, dim=0)
                 input_vitpose = torch.cat(input_vitpose, dim=0)
@@ -379,7 +379,7 @@ if __name__ == "__main__":
             full_res['accel_err'].append(accel_err)
             if target_dataset == '3dpw':
                 full_res['mpvpe'].append(mpvpe)
-            pbar.set_description(f"{np.mean(accel_err):.3f}")
+            pbar.set_description(f"{np.mean(mpjpe_pa):.3f}")
 
         print(f"\nEvaluated total {tot_num_pose} poses")
         full_res.pop(0, None)
