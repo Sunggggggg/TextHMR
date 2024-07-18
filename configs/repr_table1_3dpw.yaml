@@ -39,3 +39,6 @@ TRAIN:
   DATASET_EVAL: 'ThreeDPW'
   GEN_LR: 0.0001
   GEN_WD: 0.0
+TEXT:
+  data_root: '/mnt/SKY/AMASS_proc/processed_64frames_coco/total_description.csv'
+  PRETRAINED: '/mnt/SKY/TextHMR/pre_trained_experiment/coco_joint_small_data_64frame_H/Epoch95_checkpoint.pth.tar'
