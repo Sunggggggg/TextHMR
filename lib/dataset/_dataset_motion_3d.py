@@ -206,8 +206,12 @@ class Dataset3D(Dataset):
         kp_3d_tensor = np.zeros((self.seqlen, nj, 3), dtype=np.float16)
         
         # Lifter loss
-        coco_kp_3d_tensor = np.zeros((self.seqlen, 17, 3), dtype=np.float16)
-        coco_kp3d = convert_kps(self.get_sequence(start_index, end_index, self.db['joints3D']), src='spin', dst='coco')
+        if is_train:
+            coco_kp_3d_tensor = np.zeros((self.seqlen, 17, 3), dtype=np.float16)
+            coco_kp3d = convert_kps(self.get_sequence(start_index, end_index, self.db['joints3D']), src='spin', dst='coco')
+        else:
+            coco_kp_3d_tensor = np.zeros((self.seqlen, 19, 3), dtype=np.float16)
+            coco_kp3d = coco_kp_3d_tensor
 
         if self.dataset_name == '3dpw':
             pose = self.get_sequence(start_index, end_index, self.db['pose'])
