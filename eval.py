@@ -18,6 +18,7 @@ from lib.utils.eval_utils import compute_accel, compute_error_accel, batch_compu
 from lib.utils.slerp_filter_utils import quaternion_from_matrix, quaternion_slerp, quaternion_matrix
 from lib.utils.renderer import Renderer
 
+from lib.dataset._motion_dataset import read_pkl
 from lib.TextHMR.model_v2 import Model
 
 def get_sequence(start_index, end_index, seqlen=16):
@@ -92,7 +93,10 @@ if __name__ == "__main__":
     avg_filter = args.filter
     gender = 'neutral'
 
-    model = Model().to(cfg.DEVICE)
+    text_embeds = read_pkl(os.path.join(cfg.TEXT.data_root, 'total_description_embedding.pkl'))
+    num_motion = len(text_embeds)
+
+    model = Model(num_motion, text_embeds, cfg.TEXT.PRETRAINED).to(cfg.DEVICE)
         
     if cfg.TRAIN.PRETRAINED != '' and os.path.isfile(cfg.TRAIN.PRETRAINED):
         checkpoint = torch.load(cfg.TRAIN.PRETRAINED)
