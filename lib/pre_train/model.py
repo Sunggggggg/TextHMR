@@ -15,7 +15,7 @@ class Model(nn.Module):
         self.st_fromer = STFormer(num_frames=self.seqlen, num_joints=17, embed_dim=256, depth=4, num_heads=8, mlp_ratio=4., 
                  qkv_bias=True, qk_scale=None, drop_rate=0.1, attn_drop_rate=0.1, drop_path_rate=0.2, norm_layer=None, pretrained=False)
         
-        self.text_encoder = TEncoder(depth=3, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
+        self.text_encoder = TEncoder(depth=4, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
         
         self.co_former = CoTransformer(seqlen=self.seqlen, num_joints=17, num_words=36 ,embed_dim=256)
         
