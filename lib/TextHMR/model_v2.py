@@ -63,7 +63,7 @@ class Model(nn.Module):
                 s['scores'] = scores
 
         else:
-            size = 16
+            size = 64
             for s in smpl_output:
                 s['theta'] = s['theta'].reshape(B, size, -1)
                 s['verts'] = s['verts'].reshape(B, size, -1, 3)
