@@ -195,7 +195,7 @@ if __name__ == "__main__":
                 continue
 
             pred_j3ds, pred_verts, pred_rotmats, pred_thetas, scores = [], [], [], [], []
-            for curr_idx in range(0, len(chunk_idxes), seqlen//2):
+            for curr_idx in range(0, len(chunk_idxes), 8):
                 input_feat = []
                 input_vitpose = []
                 input_text = []
