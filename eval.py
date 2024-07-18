@@ -199,10 +199,10 @@ if __name__ == "__main__":
                 input_feat = []
                 input_vitpose = []
                 input_text = []
-                if (curr_idx + seqlen//2) < len(chunk_idxes):
-                    for ii in range(seqlen//2):
+                if (curr_idx + 8) < len(chunk_idxes):
+                    for ii in range(8):
                         seq_select = get_sequence(chunk_idxes[curr_idx+ii][0], chunk_idxes[curr_idx+ii][1])
-
+                        print(seq_select)
                         #curr_text = torch.tensor(curr_text_feats[img_name]['text_features']).to(device)  
                         input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
                         input_vitpose.append(curr_vitpose[None, seq_select, :]) # [1, 16, 17, 2]
