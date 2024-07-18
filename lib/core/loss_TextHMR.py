@@ -108,9 +108,9 @@ class Loss(nn.Module):
     def coco_keypoint_3d_loss(self, pred_keypoints_3d, gt_keypoints_3d):
         if len(gt_keypoints_3d) > 0:
             gt_pelvis = (gt_keypoints_3d[:, 11]+gt_keypoints_3d[:, 12])/2
-            gt_keypoints_3d = gt_keypoints_3d - gt_pelvis
+            gt_keypoints_3d = gt_keypoints_3d - gt_pelvis[:, None]
             pred_pelvis = (pred_keypoints_3d[:, 11]+pred_keypoints_3d[:, 12])/2
-            pred_keypoints_3d = pred_keypoints_3d - pred_pelvis
+            pred_keypoints_3d = pred_keypoints_3d - pred_pelvis[:, None]
             loss = self.criterion_keypoints(pred_keypoints_3d, gt_keypoints_3d)
             return loss.mean()
         else:
