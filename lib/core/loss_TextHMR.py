@@ -82,7 +82,8 @@ class Loss(nn.Module):
             'loss_kp_2d_init': loss_kp_2d_init,
             'loss_kp_3d_init': loss_kp_3d_init,
             'loss_accel_2d_init': loss_accel_2d_init, 
-            'loss_accel_3d_init': loss_accel_3d_init
+            'loss_accel_3d_init': loss_accel_3d_init,
+            'loss_lift_3d': loss_lift_3d,
         }
 
         if loss_pose_init is not None:
@@ -110,6 +111,17 @@ class Loss(nn.Module):
         loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
 
         return loss_kp_3d
+
+    def coco_keypoint_3d_loss(self, pred_keypoints_3d, gt_keypoints_3d):
+        if len(gt_keypoints_3d) > 0:
+            gt_pelvis = (gt_keypoints_3d[:, 11]+gt_keypoints_3d[:, 12])/2
+            gt_keypoints_3d = gt_keypoints_3d - gt_pelvis
+            pred_pelvis = (pred_keypoints_3d[:, 11]+pred_keypoints_3d[:, 12])/2
+            pred_keypoints_3d = pred_keypoints_3d - pred_pelvis
+            loss = self.criterion_keypoints(pred_keypoints_3d, gt_keypoints_3d)
+            return loss.mean()
+        else:
+            return torch.FloatTensor(1).fill_(0.).to(self.device)
 
     def cal_loss(self, sample_2d_count, real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs, mask_ids=None, short_flag=False):
         seq_len = real_2d.shape[1]
