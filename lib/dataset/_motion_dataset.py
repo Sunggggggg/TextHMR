@@ -138,15 +138,16 @@ class MotionDataset3D(MotionDataset):
         motion_text_range = motion_file["split_id"]
         subset = file_path.split('/')[-3]
 
+        # Padding
         idx_list = [self.text_candidate.index(self.text_dic[subset][i]) for i in motion_text_range]
         idx = np.unique(idx_list)
         text_feat = self.text_embeds[int(idx)][0]   # [1, n, 768]
         caption_len = text_feat.shape[0]
         caption_mask = np.ones((self.max_len))
         caption_mask[:caption_len] = 0.
-
         inp_text = np.concatenate([text_feat] + [np.zeros_like(text_feat[0:1]) for _ in range(self.max_len-caption_len)], axis=0)
 
+        # 
         gt_class = np.zeros((self.num_motions))
         gt_class[idx] = 1.
 

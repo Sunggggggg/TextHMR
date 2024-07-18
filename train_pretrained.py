@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('--exp_root', type=str, default='./pre_trained_experiment/')
     parser.add_argument('--gpu', type=str, default='1')
     parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument('--epoch', type=int, default=100)
+    parser.add_argument('--epoch', type=int, default=30)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D'])
     #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
     parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
@@ -73,15 +73,15 @@ def main(args):
     losses_text = AverageMeter()
 
     ### Train
-    train_3d_iter = iter(train_loader_3d)
+    #train_3d_iter = iter(train_loader_3d)
     model.train()
     for i in range(args.epoch):
-        for itr in tqdm(range(1000)):
-            try:
-                target_3d = next(train_3d_iter)
-            except StopIteration:
-                train_3d_iter = iter(train_loader_3d)
-                target_3d = next(train_3d_iter)
+        for target_3d in tqdm(train_loader_3d):
+            # try:
+            #     target_3d = next(train_3d_iter)
+            # except StopIteration:
+            #     train_3d_iter = iter(train_loader_3d)
+            #     target_3d = next(train_3d_iter)
             
             (motion_2d, inp_text, caption_mask), (motion_3d, gt_class) = target_3d
             motion_2d = motion_2d.cuda()
@@ -115,7 +115,7 @@ def main(args):
             losses_3d_velocity.update(args.lambda_3d_velocity * loss_3d_velocity, motion_2d.size(0))
             losses_text.update(args.lambda_text * loss_text, motion_2d.size(0))
 
-            summary_string = f'({i + 1}/{args.epoch}) | {itr}/1000 | loss: {losses_total.avg:.2f} ' \
+            summary_string = f'({i + 1}/{args.epoch}) | loss: {losses_total.avg:.2f} ' \
                                 f'| 3d: {losses_3d_pos.avg:.2f} | 3d_scale: {losses_3d_scale.avg:.2f} | 3d_vel: {losses_3d_velocity.avg:.2f} ' \
                                 f'| text: {losses_text.avg:.2f} '
             print(summary_string)
