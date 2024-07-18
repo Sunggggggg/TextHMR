@@ -25,7 +25,6 @@ class Model(nn.Module):
         )
 
         self.text_head = nn.ModuleList([nn.Sequential(nn.Linear(256, 32), nn.ReLU(), nn.Dropout()),
-                                         nn.Sequential(nn.Linear(32, 32), nn.ReLU(), nn.Dropout()),
                                          nn.Linear(32*17, num_total_motion)])
 
     def extraction_features(self, pose_2d, text_embeds, return_joint=False):
@@ -70,9 +69,9 @@ class Model(nn.Module):
         x = joint_feat.mean(dim=1)
 
         x = self.text_head[0](x)               # [B, J, d]
-        x = self.text_head[1](x)               # [B, J, d]
         x = x.flatten(-2)                      # [B, J*d]
-        x = self.text_head[2](x)               # [B, num_total_motion]
+        x = self.text_head[1](x)               # [B, num_total_motion]
+        x = F.gumbel_softmax(x, hard=True)
 
         return x
 
