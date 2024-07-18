@@ -71,7 +71,6 @@ class Model(nn.Module):
         x = self.text_head[0](x)               # [B, J, d]
         x = x.flatten(-2)                      # [B, J*d]
         x = self.text_head[1](x)               # [B, num_total_motion]
-        x = F.gumbel_softmax(x, hard=True)
 
         return x
 
