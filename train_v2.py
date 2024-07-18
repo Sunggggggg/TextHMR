@@ -64,6 +64,12 @@ def main(cfg):
     model = Model(num_motion, text_embeds, cfg.TEXT.PRETRAINED).to(cfg.DEVICE)
     logger.info(f'net: {model}')
 
+    if cfg.TRAIN.PRETRAINED :
+        pretrained_dict = torch.load(cfg.TRAIN.PRETRAINED)['gen_state_dict']
+
+        model.load_state_dict(pretrained_dict)
+        print(f'=> loaded pretrained model from \'{cfg.TRAIN.PRETRAINED}\'')
+
     # ========= Optimizer, Scheduler ========= #
     net_params = sum(map(lambda x: x.numel(), model.parameters()))
     logger.info(f'params num: {net_params}')
