@@ -223,7 +223,7 @@ if __name__ == "__main__":
                 input_feat = torch.cat(input_feat, dim=0)
                 input_vitpose = torch.cat(input_vitpose, dim=0)
                 #input_text = torch.cat(input_text, dim=0)
-                preds, pose_3d = model(input_text, input_feat, input_vitpose, J_regressor=J_regressor, is_train=False)
+                preds, pose_3d = model(input_feat, input_vitpose, J_regressor=J_regressor, is_train=False)
 
                 n_kp = preds[-1]['kp_3d'].shape[-2]
                 pred_j3d = preds[-1]['kp_3d'].view(-1, n_kp, 3).cpu().numpy()
