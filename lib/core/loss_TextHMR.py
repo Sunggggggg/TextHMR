@@ -96,18 +96,11 @@ class Loss(nn.Module):
 
     def cal_lift_loss(self, sample_2d_count, real_3d, w_3d, reduce, flatten, generator_outputs):
         """
-        real_3d : [B, 1, 19, 3]
-        generator_outputs : [B, 19, 3]
+        real_3d : [B, T, 17, 3]
+        generator_outputs : [B, T, 17, 3]
         """
-        w_3d = flatten(w_3d)
-
-        pred_j3d = generator_outputs[sample_2d_count:]  # [B, 19, 3]
-
-        pred_j3d = pred_j3d[w_3d]                       # [B, 19, 3]
-        real_3d = reduce(real_3d)
-        real_3d = real_3d[w_3d]                         # [B, 19, 3]
+        pred_j3d = generator_outputs[sample_2d_count:]  # [B, 17, 3]
         loss_kp_3d = self.coco_keypoint_3d_loss(pred_j3d, real_3d)
-
         loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
 
         return loss_kp_3d
