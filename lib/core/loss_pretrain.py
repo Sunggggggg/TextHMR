@@ -203,4 +203,4 @@ def loss_angle_velocity(x, gt):
     return nn.L1Loss()(x_av, gt_av)
 
 def loss_cross_entropy(x, gt):
-    return nn.CrossEntropyLoss()(x, gt)
+    return nn.CrossEntropyLoss()(x, gt.flatten())
