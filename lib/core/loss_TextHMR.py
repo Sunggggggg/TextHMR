@@ -52,6 +52,7 @@ class Loss(nn.Module):
     def forward(
             self,
             generator_outputs,
+            pose_3d,
             data_2d,
             data_3d
         ):
@@ -73,6 +74,10 @@ class Loss(nn.Module):
         loss_kp_2d_init, loss_kp_3d_init, loss_accel_2d_init, loss_accel_3d_init, loss_pose_init, loss_shape_init  = self.cal_loss(sample_2d_count, \
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs)
 
+        # Lift
+        lift_3d = data_3d['coco_kp_3d'] # [B, T, 17, 3]
+        loss_lift_3d = self.cal_lift_loss(sample_2d_count, lift_3d, w_3d, reduce, flatten, pose_3d)
+
         loss_dict = {
             'loss_kp_2d_init': loss_kp_2d_init,
             'loss_kp_3d_init': loss_kp_3d_init,
@@ -87,6 +92,24 @@ class Loss(nn.Module):
         gen_loss = torch.stack(list(loss_dict.values())).sum()
 
         return gen_loss, loss_dict
+
+    def cal_lift_loss(self, sample_2d_count, real_3d, w_3d, reduce, flatten, generator_outputs):
+        """
+        real_3d : [B, 1, 19, 3]
+        generator_outputs : [B, 19, 3]
+        """
+        w_3d = flatten(w_3d)
+
+        pred_j3d = generator_outputs[sample_2d_count:]  # [B, 19, 3]
+
+        pred_j3d = pred_j3d[w_3d]                       # [B, 19, 3]
+        real_3d = reduce(real_3d)
+        real_3d = real_3d[w_3d]                         # [B, 19, 3]
+        loss_kp_3d = self.coco_keypoint_3d_loss(pred_j3d, real_3d)
+
+        loss_kp_3d = loss_kp_3d * self.e_3d_loss_weight
+
+        return loss_kp_3d
 
     def cal_loss(self, sample_2d_count, real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs, mask_ids=None, short_flag=False):
         seq_len = real_2d.shape[1]

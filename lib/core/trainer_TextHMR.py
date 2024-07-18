@@ -158,13 +158,14 @@ class Trainer():
             timer['data'] = time.time() - start
             start = time.time()
 
-            smpl_output = self.generator(input_feat, input_pose, is_train=True)
+            smpl_output, pose_3d = self.generator(input_feat, input_pose, is_train=True)
             
             timer['forward'] = time.time() - start
             start = time.time()
 
             gen_loss, loss_dict = self.criterion(
                 generator_outputs=smpl_output,
+                pose_3d=pose_3d,
                 data_2d=target_2d,
                 data_3d=target_3d
             )
@@ -233,7 +234,7 @@ class Trainer():
                 input_feat = target['features'].cuda()
                 input_pose = target['vitpose_j2d'].cuda()
 
-                smpl_output = self.generator(input_feat, input_pose, is_train=False, J_regressor=J_regressor)
+                smpl_output, pose_3d = self.generator(input_feat, input_pose, is_train=False, J_regressor=J_regressor)
             
                 # convert to 14 keypoint format for evaluation
                 n_kp = smpl_output[-1]['kp_3d'].shape[-2]
