@@ -125,7 +125,7 @@ class CrossAttentionBlock(nn.Module):
 class CoTransformer(nn.Module):
     def __init__(self, seqlen=16, num_joints=17, num_words=16 ,embed_dim=256,):
         super().__init__()
-        depth = 8
+        depth = 6
         self.seqlen = seqlen
         self.num_joints = num_joints
         self.temp_pos_emb = nn.Parameter(torch.rand((1, seqlen, embed_dim)))
