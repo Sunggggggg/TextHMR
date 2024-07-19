@@ -23,9 +23,9 @@ def parse_args():
     parser.add_argument('--epoch', type=int, default=30)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D'])
     #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
-    parser.add_argument('--lambda_3d_pose', type=float, default=10.0)
-    parser.add_argument('--lambda_3d_velocity', type=float, default=10.0)
-    parser.add_argument('--lambda_scale', type=float, default=10.0)
+    parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
+    parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)
+    parser.add_argument('--lambda_scale', type=float, default=0.5)
     parser.add_argument('--lambda_text', type=float, default=1.0)
 
     args = parser.parse_args()
