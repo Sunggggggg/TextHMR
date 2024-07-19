@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument('--exp_root', type=str, default='./pre_trained_experiment/')
     parser.add_argument('--gpu', type=str, default='1')
     parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--seqlen', type=int, default=243)
     parser.add_argument('--epoch', type=int, default=30)
     parser.add_argument('--subset_list', type=list, default=['HUMAN4D'])
     #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
@@ -58,7 +59,7 @@ def main(args):
     print('Load dataset #of motion :', num_motions)
 
     ### Model
-    model = Model(num_total_motion=num_motions)
+    model = Model(num_total_motion=num_motions, seqlen=args.seqlen)
     model.to('cuda')
     
     ### Optim

@@ -7,11 +7,11 @@ from .CrossAtten import CoTransformer
 from .text_encoder import TEncoder
 
 class Model(nn.Module):
-    def __init__(self, num_total_motion) :
+    def __init__(self, num_total_motion, seqlen) :
         super().__init__()
         self.mid_frame = 8
         self.num_words = 36
-        self.seqlen = 64
+        self.seqlen = seqlen
         self.st_fromer = STFormer(num_frames=self.seqlen, num_joints=17, embed_dim=256, depth=4, num_heads=8, mlp_ratio=4., 
                  qkv_bias=True, qk_scale=None, drop_rate=0.1, attn_drop_rate=0.1, drop_path_rate=0.2, norm_layer=None, pretrained=False)
         
