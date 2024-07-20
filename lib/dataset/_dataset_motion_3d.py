@@ -201,7 +201,7 @@ class Dataset3D(Dataset):
         input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
         
         # ViTpose
-        inp_vitpose = crop_scale_2d(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']), scale_range=[1.0, 1.2])   # [T, J, 3]
+        inp_vitpose = crop_scale_2d(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
         inp_vitpose = torch.from_numpy(inp_vitpose).float()
         
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)

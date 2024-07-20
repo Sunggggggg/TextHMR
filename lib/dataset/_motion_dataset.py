@@ -74,7 +74,7 @@ class MotionDataset3D(MotionDataset):
         if self.data_split=="train":
             if self.synthetic or self.gt_2d:
                 #motion_3d = self.aug.augment3D(motion_3d)
-                motion_3d = crop_scale_3d(motion_3d, [0.5, 1.0])
+                motion_3d = crop_scale_3d(motion_3d)
                 motion_2d = np.zeros(motion_3d.shape, dtype=np.float32)
                 motion_2d[:,:,:2] = motion_3d[:,:,:2]
                 motion_2d[:,:,2] = 1                        # No 2D detection, use GT xy and c=1.
