@@ -26,7 +26,7 @@ from torch.utils.data import Dataset
 from lib.core.config import GLoT_DB_DIR
 from lib.data_utils._kp_utils import convert_kps
 from lib.data_utils._img_utils import normalize_2d_kp, transfrom_keypoints, split_into_chunks, get_single_image_crop
-from lib.data_utils._moition_utils import crop_scale_2d
+from lib.data_utils._moition_utils import crop_scale_2d, crop_scale_3d
 
 logger = logging.getLogger(__name__)
 
@@ -230,7 +230,7 @@ class Dataset3D(Dataset):
 
             # Lifter loss
             coco_kp_3d_tensor[idx, :17] = coco_kp3d[idx, :17]
-
+        coco_kp_3d_tensor = crop_scale_3d(coco_kp_3d_tensor)
         # (N-2)xnjx3
         # accel_gt = kp_3d_tensor[:-2] - 2 * kp_3d_tensor[1:-1] + kp_3d_tensor[2:]
         # accel_gt = np.linalg.norm(accel_gt, axis=2) # (N-2)xnj
