@@ -61,7 +61,7 @@ def main(cfg):
     )
 
     # ========= Model ========= #
-    model = Model(num_motion, text_embeds, cfg.TEXT.PRETRAINED).to(cfg.DEVICE)
+    model = Model(cfg.DATASET.SEQLEN, num_motion, text_embeds, cfg.TEXT.PRETRAINED).to(cfg.DEVICE)
     logger.info(f'net: {model}')
 
     if cfg.TRAIN.PRETRAINED :

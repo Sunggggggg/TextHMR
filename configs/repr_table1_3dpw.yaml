@@ -8,7 +8,7 @@ OUTPUT_DIR: './experiments' # your path
 NUM_WORKERS: 4
 SEED_VALUE: 1
 DATASET:
-  SEQLEN: 16
+  SEQLEN: 64
 LOSS:
   KP_2D_W: 300.0
   KP_3D_W: 300.0

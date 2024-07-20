@@ -9,6 +9,7 @@ from lib.pre_train.model import Model as pre_trained_model
 
 class Model(nn.Module):
     def __init__(self, 
+                 seqlen,
                  num_total_motion,
                  text_archive,
                  pretrained) :
@@ -20,7 +21,7 @@ class Model(nn.Module):
 
         self.temp_encoder = Transformer(depth=3, embed_dim=512, mlp_hidden_dim=1024, 
                                         h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=64)
-        self.pre_trained_model = pre_trained_model(num_total_motion)
+        self.pre_trained_model = pre_trained_model(num_total_motion, seqlen)
         self.regressor = Regressor(512+256*17)
 
         if pretrained :

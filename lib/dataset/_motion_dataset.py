@@ -6,6 +6,7 @@ import copy
 import pickle
 import torch
 from torch.utils.data import Dataset
+from lib.data_utils._moition_utils import crop_scale_3d, crop_scale_2d, read_pkl
 
 class Augmenter3D(object):
     """

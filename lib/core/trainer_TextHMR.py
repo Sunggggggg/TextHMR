@@ -105,6 +105,7 @@ class Trainer():
         kp_3d_loss = AverageMeter()
         kp_2d_accel_loss = AverageMeter()
         kp_3d_accel_loss = AverageMeter()
+        lift_3d_loss = AverageMeter()
 
         timer = {
             'data': 0,
@@ -188,14 +189,14 @@ class Trainer():
             kp_3d_loss.update(loss_dict['loss_kp_3d_init'].item(), input_feat.size(0))
             kp_2d_accel_loss.update(loss_dict['loss_accel_2d_init'].item(), input_feat.size(0))
             kp_3d_accel_loss.update(loss_dict['loss_accel_3d_init'].item(), input_feat.size(0))
-
+            lift_3d_loss.update(loss_dict['loss_lift_3d'].item(), input_feat.size(0))
 
             timer['backward'] = time.time() - start
             timer['batch'] = timer['data'] + timer['forward'] + timer['loss'] + timer['backward']
             start = time.time()
 
             summary_string = f'({i + 1}/{self.num_iters_per_epoch}) | Total: {bar.elapsed_td} | ETA: {bar.eta_td:} | loss: {losses.avg:.2f} ' \
-                             f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f} ' \
+                             f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f} | lift: {lift_3d_loss:.2f}' \
                              f'| 2d_accel: {kp_2d_accel_loss.avg:.2f} | 3d_accel: {kp_3d_accel_loss.avg:.2f} ' \
             
             for k,v in timer.items():

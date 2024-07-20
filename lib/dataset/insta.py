@@ -24,7 +24,7 @@ from torch.utils.data import Dataset
 from lib.core.config import GLoT_DB_DIR
 from lib.data_utils._kp_utils import convert_kps
 from lib.data_utils._img_utils import normalize_2d_kp, split_into_chunks
-from lib.dataset._dataset_motion_3d import pose_processing
+from lib.data_utils._moition_utils import crop_scale_2d
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class Insta(Dataset):
             kp_2d_tensor = np.ones((self.seqlen, 49, 3), dtype=np.float16)
 
             input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
-            inp_vitpose = pose_processing(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d'])[..., :2])
+            inp_vitpose = crop_scale_2d(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d'])[..., :2])
             inp_vitpose = torch.from_numpy(inp_vitpose).float()
 
             vid_name = self.get_sequence(start_index, end_index, self.db['vid_name'])
