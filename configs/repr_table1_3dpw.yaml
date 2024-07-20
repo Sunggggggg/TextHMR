@@ -19,9 +19,9 @@ LOSS:
   vel_or_accel_3d_weight: 100.
   use_accel: False
 TRAIN:
-  val_epoch: 2
+  val_epoch: 25
   BATCH_SIZE: 32
-  NUM_ITERS_PER_EPOCH: 2
+  NUM_ITERS_PER_EPOCH: 1000
   #PRETRAINED: '/mnt/SKY/GLoT_ViTPose/experiments/06-05-2024_17-24-39_Context_Token_LQ/checkpoint.pth.tar' # for testing
   #PRETRAINED_REGRESSOR: '/mnt/SKY/preprocessed_data/spin_model_checkpoint.pth.tar' # your path
   RESUME: ''
@@ -30,8 +30,8 @@ TRAIN:
   LR_PATIENCE: 5
   DATA_2D_RATIO: 0.6
   OVERLAP: 0.
-  #DATASETS_2D:
-  #  - 'Insta'
+  DATASETS_2D:
+    - 'Insta'
   DATASETS_3D:
     - 'ThreeDPW'
     - 'MPII3D'
@@ -40,5 +40,5 @@ TRAIN:
   GEN_LR: 0.0001
   GEN_WD: 0.0
 TEXT:
-  data_root: '/mnt/SKY/AMASS_proc/processed_64frames_coco/total_description.csv'
-  PRETRAINED: '/mnt/SKY/TextHMR/pre_trained_experiment/coco_joint_small_data_64frame_H/Epoch95_checkpoint.pth.tar'
+  data_root: '/mnt/SKY/AMASS_proc/processed_64frames_coco_16_fps10/total_description.csv'
+  PRETRAINED: '/mnt/SKY/TextHMR/pre_trained_experiment/coco_joint_64/Epoch25_checkpoint.pth.tar'

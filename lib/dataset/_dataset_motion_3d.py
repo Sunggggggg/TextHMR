@@ -26,51 +26,9 @@ from torch.utils.data import Dataset
 from lib.core.config import GLoT_DB_DIR
 from lib.data_utils._kp_utils import convert_kps
 from lib.data_utils._img_utils import normalize_2d_kp, transfrom_keypoints, split_into_chunks, get_single_image_crop
-from lib.dataset._motion_dataset import crop_scale_2d
+from lib.data_utils._moition_utils import crop_scale_2d
 
 logger = logging.getLogger(__name__)
-
-coco2h36m = [
-    17,     # Pelvis
-    11,     # lhip
-    13,     # lknee
-    15,     # lankle
-    12,     # rhip
-    14,     # rknee
-    16,     # rankle
-    19,     # Spine
-    18,     # Neck
-    0,      # head
-    20,     # head top
-    5,      # lsh
-    7,      # lel
-    9,      # lwr
-    6,      # rsh
-    8,      # rel
-    10,     # rwr
-]
-
-def add_joint(pose2d):
-    pelvis = pose2d[:,[11,12],:2].mean(axis=1, keepdims=True)
-    neck = pose2d[:,[5,6],:2].mean(axis=1, keepdims=True)
-    spin = (pelvis + neck) / 2
-    head_top = pose2d[:,[1,2],:2].mean(axis=1, keepdims=True)
-
-    return np.concatenate([pose2d, pelvis, neck, spin, head_top], axis=1)
-
-def pose_processing(joint_2d):
-    """
-    joint_2d : [T, J, 2]
-    """
-    joint_2d = add_joint(joint_2d[..., :2])
-
-    h36m_joint = np.zeros((joint_2d.shape[0], 17, 2))
-    for idx, j_idx in enumerate(coco2h36m) :
-        h36m_joint[:, idx] = joint_2d[:, j_idx]
-
-    h36m_joint = h36m_joint - h36m_joint[:, 0:1]    # [T, J, 2]
-    h36m_joint = crop_scale_2d(h36m_joint)
-    return h36m_joint
 
 
 class Dataset3D(Dataset):
@@ -243,7 +201,7 @@ class Dataset3D(Dataset):
         input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
         
         # ViTpose
-        inp_vitpose = pose_processing(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
+        inp_vitpose = crop_scale_2d(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
         inp_vitpose = torch.from_numpy(inp_vitpose).float()
         
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)
