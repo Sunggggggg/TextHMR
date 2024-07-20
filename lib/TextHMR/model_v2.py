@@ -14,6 +14,7 @@ class Model(nn.Module):
                  text_archive,
                  pretrained) :
         super().__init__()
+        self.seqlen = seqlen
         self.text_archive = text_archive
 
         self.proj_img = nn.Linear(2048, 512)
@@ -64,7 +65,7 @@ class Model(nn.Module):
                 s['scores'] = scores
 
         else:
-            size = 64
+            size = self.seqlen
             for s in smpl_output:
                 s['theta'] = s['theta'].reshape(B, size, -1)
                 s['verts'] = s['verts'].reshape(B, size, -1, 3)
