@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--seqlen', type=int, default=243)
     parser.add_argument('--epoch', type=int, default=20)
-    parser.add_argument('--subset_list', type=list, default=['HUMAN4D'])
+    parser.add_argument('--subset_list', type=list, default=['KIT'])
     #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
     parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
     parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)
