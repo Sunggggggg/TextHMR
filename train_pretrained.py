@@ -121,14 +121,13 @@ def main(args):
                                 f'| text: {losses_text.avg:.2f} '
             print(summary_string)
 
-            if (i+1) % 5 == 0 :
-                save_dict = {
-                    'epoch': i,
-                    'gen_state_dict': model.state_dict(),
-                    'gen_optimizer': optimizer.state_dict(),
-                }
-                filename = os.path.join(exp_dir, f'Epoch{i+1}_checkpoint.pth.tar')
-                torch.save(save_dict, filename)
+    save_dict = {
+        'epoch': i,
+        'gen_state_dict': model.state_dict(),
+        'gen_optimizer': optimizer.state_dict(),
+    }
+    filename = os.path.join(exp_dir, f'Epoch{i+1}_checkpoint.pth.tar')
+    torch.save(save_dict, filename)
 
 if __name__ == '__main__':
     args = parse_args()
