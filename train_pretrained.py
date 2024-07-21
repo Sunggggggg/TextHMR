@@ -6,7 +6,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 
-from lib.pre_train.model import Model
+from lib.pre_train.model_part import Model
 from lib.core.loss_pretrain import *
 from lib.dataset._motion_dataset import MotionDataset3D
 from lib.utils.utils import AverageMeter
@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--seqlen', type=int, default=243)
     parser.add_argument('--epoch', type=int, default=20)
-    parser.add_argument('--subset_list', type=list, default=['KIT'])
+    parser.add_argument('--subset_list', type=list, default=['HUMAN4D'])
     #parser.add_argument('--subset_list', type=list, default=['HUMAN4D' ,'KIT', 'ACCAD', 'BioMotionLab_NTroje'])
     parser.add_argument('--lambda_3d_pose', type=float, default=1.0)
     parser.add_argument('--lambda_3d_velocity', type=float, default=20.0)

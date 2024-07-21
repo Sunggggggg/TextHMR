@@ -79,7 +79,7 @@ class Model(nn.Module):
         caption_mask : [B, 36]
         """
         # Stage 1.
-        joint_feat = self.st_fromer(pose_2d, return_joint=False)  # [B, T, J, dim] 
+        joint_feat = self.part_atten(pose_2d, return_joint=False)  # [B, T, J, dim] 
         pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
 
         # Stage 2.
