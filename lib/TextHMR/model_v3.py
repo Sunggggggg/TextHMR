@@ -91,7 +91,8 @@ class Model(nn.Module):
         else :
             local_feat = local_feat[:, 4:5]
 
-        smpl_output, _ = self.local_regressor(local_feat, pred_pose, pred_shape, pred_cam)
+        smpl_output, _ = self.local_regressor(local_feat, init_pose=pred_pose, init_shape=pred_shape, init_cam=pred_cam, 
+                                              is_train=is_train, J_regressor=J_regressor)
 
         if not is_train:
             for s in smpl_output:
