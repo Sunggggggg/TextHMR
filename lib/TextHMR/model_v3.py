@@ -31,8 +31,7 @@ class Model(nn.Module):
                                     nn.ReLU())
         self.global_regressor = Regressor(512)
 
-        self.proj_local = nn.Sequential(nn.Linear(512+256*17, 512),
-                                        nn.ReLU(), 
+        self.proj_local = nn.Sequential(nn.Linear(512+256*17, 256),
                                         nn.Linear(512, 256),
                                         nn.LayerNorm(256))
         self.local_encoder = Transformer(depth=2, embed_dim=256, mlp_hidden_dim=1024, 
@@ -87,7 +86,7 @@ class Model(nn.Module):
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
 
         mid_frame = T//2
-        local_feat = self.proj_local(f[:, mid_frame-4:mid_frame+5])
+        local_feat = self.proj_local(f[:, mid_frame-4:mid_frame+5]) # [B, T, dim]
         local_feat = self.local_encoder(local_feat)
         if is_train:
             local_feat = local_feat
