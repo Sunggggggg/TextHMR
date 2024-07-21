@@ -23,23 +23,23 @@ class PartAttentionModule(nn.Module):
 
         self.head_conv = nn.Sequential(
             nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 5), padding=(1, 2)),
-            nn.ReLU(), nn.LayerNorm(embed_dim)
+            nn.ReLU()
             )
         self.left_arm_conv = nn.Sequential(
             nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(), nn.LayerNorm(embed_dim)
+            nn.ReLU()
             )
         self.right_arm_conv = nn.Sequential(
             nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(), nn.LayerNorm(embed_dim)
+            nn.ReLU()
             )
         self.left_leg_conv = nn.Sequential(
             nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(), nn.LayerNorm(embed_dim)
+            nn.ReLU()
             )
         self.right_leg_conv = nn.Sequential(
             nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim, kernel_size=(3, 3), padding=(1, 1)),
-            nn.ReLU(), nn.LayerNorm(embed_dim)
+            nn.ReLU()
             )
 
     def forward(self, full_body):
