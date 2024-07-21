@@ -109,9 +109,9 @@ class Regressor(nn.Module):
             'rotmat' : pred_rotmat                                      # [BT, 24, 3, 3]
         }]
         
-        pred_pose = pred_pose.reshape(B, seq_len, -1)
-        pred_shape = pred_shape.reshape(B, seq_len, -1)
-        pred_cam = pred_cam.reshape(B, seq_len, -1)
+        pred_pose = pred_pose.reshape(B, seq_len, -1)[:, seq_len//2 -4 : seq_len//2 +5]
+        pred_shape = pred_shape.reshape(B, seq_len, -1)[:, seq_len//2 -4 : seq_len//2 +5]
+        pred_cam = pred_cam.reshape(B, seq_len, -1)[:, seq_len//2 -4 : seq_len//2 +5]
 
         return output, (pred_pose, pred_shape, pred_cam)
 
