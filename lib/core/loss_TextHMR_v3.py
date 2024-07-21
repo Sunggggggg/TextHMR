@@ -71,8 +71,8 @@ class Loss(nn.Module):
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_short)
 
         # Lift
-        lift_3d = data_3d['coco_kp_3d'] # [B, T, 17, 3]
-        loss_lift_3d = self.cal_lift_loss(sample_2d_count, lift_3d, w_3d, reduce, flatten, pose_3d)
+        # lift_3d = data_3d['coco_kp_3d'] # [B, T, 17, 3]
+        # loss_lift_3d = self.cal_lift_loss(sample_2d_count, lift_3d, w_3d, reduce, flatten, pose_3d)
 
         loss_dict = {
             'loss_kp_2d_init': loss_kp_2d_init,
@@ -83,7 +83,7 @@ class Loss(nn.Module):
             'loss_accel_3d_init': loss_accel_3d_init,
             'loss_accel_2d_short': loss_accel_2d_short,
             'loss_accel_3d_short': loss_accel_3d_short,
-            'loss_lift_3d':loss_lift_3d
+            #'loss_lift_3d':loss_lift_3d
         }
 
         if loss_pose_init is not None:
