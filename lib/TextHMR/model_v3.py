@@ -18,18 +18,19 @@ class Model(nn.Module):
         self.text_archive = text_archive
 
         self.proj_img = nn.Linear(2048, 512)
+        self.proj_joint = nn.Linear(256, 32)
 
         self.temp_encoder = Transformer(depth=3, embed_dim=512, mlp_hidden_dim=2048, 
                                         h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=64)
         self.pre_trained_model = pre_trained_model(num_total_motion, seqlen)
 
-        self.fusing = nn.Sequential(nn.Linear(512+256*17, 512),
+        self.fusing = nn.Sequential(nn.Linear(512+32*17, 512),
                                     nn.ReLU(), 
                                     nn.Linear(512, 512),
                                     nn.ReLU())
         self.global_regressor = Regressor(512)
 
-        self.proj_local = nn.Sequential(nn.Linear(512+256*17, 256),
+        self.proj_local = nn.Sequential(nn.Linear(512+32*17, 256),
                                         nn.Linear(512, 256),
                                         nn.LayerNorm(256))
         self.local_encoder = Transformer(depth=2, embed_dim=256, mlp_hidden_dim=1024, 
@@ -51,6 +52,7 @@ class Model(nn.Module):
         pose_2d = pose_2d[..., :2]
 
         joint_feat = self.pre_trained_model.extraction_features(pose_2d, self.text_archive)   # [B, T, J, 256]
+        joint_feat = self.proj_joint(joint_feat)
         joint_feat = joint_feat.flatten(-2)                 # [B, T, 544]
 
         img_feat = self.proj_img(f_img)                     
