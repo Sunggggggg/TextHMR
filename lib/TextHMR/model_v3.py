@@ -5,7 +5,7 @@ import pandas as pd
 
 from .regressor import Regressor
 from .transformer import Transformer
-from lib.pre_train.model import Model as pre_trained_model
+from lib.pre_train.model_part import Model as pre_trained_model
 
 class Model(nn.Module):
     def __init__(self, 
