@@ -49,7 +49,7 @@ class Regressor(nn.Module):
             nn.init.constant_(m.weight, 1.0)
 
     def forward(self, x, init_pose=None, init_shape=None, init_cam=None, n_iter=3, is_train=False, J_regressor=None):
-        seq_len = x.shape[1]
+        B, seq_len = x.shape[:2]
         x = x.reshape(-1, x.size(-1))
         batch_size = x.shape[0]
         if init_pose is None:
@@ -109,6 +109,10 @@ class Regressor(nn.Module):
             'rotmat' : pred_rotmat                                      # [BT, 24, 3, 3]
         }]
         
+        pred_pose = pred_pose.reshape(B, seq_len, -1)
+        pred_shape = pred_shape.reshape(B, seq_len, -1)
+        pred_cam = pred_cam.reshape(B, seq_len, -1)
+
         return output, (pred_pose, pred_shape, pred_cam)
 
 def projection(pred_joints, pred_camera):

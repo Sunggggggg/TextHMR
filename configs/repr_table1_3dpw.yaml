@@ -40,5 +40,5 @@ TRAIN:
   GEN_LR: 0.0001
   GEN_WD: 0.0
 TEXT:
-  data_root: '/mnt/SKY/AMASS_proc/processed_64frames_coco_16_fps10/total_description.csv'
+  data_root: '/mnt/SKY/AMASS_proc/processed_64frames_coco_16_fps10/'
   PRETRAINED: '/mnt/SKY/TextHMR/pre_trained_experiment/coco_joint_64/Epoch25_checkpoint.pth.tar'
