@@ -48,14 +48,24 @@ class Regressor(nn.Module):
             nn.init.constant_(m.bias, 0)
             nn.init.constant_(m.weight, 1.0)
 
-    def forward(self, x, n_iter=3, is_train=False, J_regressor=None):
+    def forward(self, x, init_pose=None, init_shape=None, init_cam=None, n_iter=3, is_train=False, J_regressor=None):
         seq_len = x.shape[1]
         x = x.reshape(-1, x.size(-1))
         batch_size = x.shape[0]
+        if init_pose is None:
+            init_pose = self.init_pose.expand(batch_size, -1)
+        else : 
+            init_pose = init_pose.reshape(-1, init_pose.size(-1))
         
-        init_pose = self.init_pose.expand(batch_size, -1)
-        init_shape = self.init_shape.expand(batch_size, -1)
-        init_cam = self.init_cam.expand(batch_size, -1)
+        if init_shape is None:
+            init_shape = self.init_shape.expand(batch_size, -1)
+        else : 
+            init_shape = init_shape.reshape(-1, init_shape.size(-1))
+        
+        if init_cam is None:
+            init_cam = self.init_cam.expand(batch_size, -1)
+        else : 
+            init_cam = init_cam.reshape(-1, init_cam.size(-1))
         
         pred_pose = init_pose
         pred_shape = init_shape
@@ -99,7 +109,7 @@ class Regressor(nn.Module):
             'rotmat' : pred_rotmat                                      # [BT, 24, 3, 3]
         }]
         
-        return output
+        return output, (pred_pose, pred_shape, pred_cam)
 
 def projection(pred_joints, pred_camera):
     pred_cam_t = torch.stack([pred_camera[:, 1],

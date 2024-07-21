@@ -25,13 +25,13 @@ class Model(nn.Module):
         self.text_head = nn.ModuleList([nn.Sequential(nn.Linear(256, 32), nn.ReLU(), nn.Dropout()),
                                          nn.Linear(32*17, num_total_motion)])
 
-    def extraction_features(self, pose_2d, text_embeds, return_joint=False):
+    def extraction_features(self, pose_2d, text_embeds):
         """
         pose_2d         : [B, T, J, 2]
         text_embeds     : [7693]
         """
         # Stage 1
-        joint_feat = self.st_fromer(pose_2d, return_joint=False)  # [B, T, J, dim] 
+        joint_feat = self.part_atten(pose_2d, return_joint=False)  # [B, T, J, dim] 
         pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
         max_pred_text = torch.argmax(pred_text, dim=-1)           # [B]
         
@@ -54,11 +54,7 @@ class Model(nn.Module):
         #
         text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
         joint_feat = self.co_former(joint_feat, text_feat, caption_mask)    # [B, T, J, dim]             
-        if return_joint :
-            pred_kp_3d = self.joint_head(joint_feat)                        # [B, T, J, 3] 
-            return pred_kp_3d
-        else :
-            return joint_feat
+        return joint_feat
 
     def text_prediction(self, joint_feat):
         """ Text predicting via joint features

@@ -230,7 +230,7 @@ class Dataset3D(Dataset):
 
             # Lifter loss
             coco_kp_3d_tensor[idx, :17] = coco_kp3d[idx, :17]
-        coco_kp_3d_tensor = crop_scale_3d(coco_kp_3d_tensor)
+            
         # (N-2)xnjx3
         # accel_gt = kp_3d_tensor[:-2] - 2 * kp_3d_tensor[1:-1] + kp_3d_tensor[2:]
         # accel_gt = np.linalg.norm(accel_gt, axis=2) # (N-2)xnj
