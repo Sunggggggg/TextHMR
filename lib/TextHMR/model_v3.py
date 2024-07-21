@@ -67,7 +67,7 @@ class Model(nn.Module):
         else :
             global_feat = self.fusing(f[:, T//2 : T//2 + 1])
 
-        global_smpl_output, pred_pose, pred_shape, pred_cam = self.global_regressor(global_feat, is_train=is_train, J_regressor=J_regressor)
+        global_smpl_output, (pred_pose, pred_shape, pred_cam) = self.global_regressor(global_feat, is_train=is_train, J_regressor=J_regressor)
 
         if not is_train:
             for s in global_smpl_output:
