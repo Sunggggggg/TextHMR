@@ -101,7 +101,7 @@ def main(args):
             # loss_lg = loss_limb_gt(pred_kp_3d, motion_3d)
             # loss_a = loss_angle(pred_kp_3d, motion_3d)
             # loss_av = loss_angle_velocity(pred_kp_3d, motion_3d)
-            loss_text = loss_cross_entropy(pred_text, gt_class.squeeze())
+            loss_text = loss_cross_entropy(pred_text, gt_class.flatten())
 
             loss_total = (args.lambda_3d_pose * loss_3d_pos) + (args.lambda_scale * loss_3d_scale) + (args.lambda_3d_velocity * loss_3d_velocity)\
                         + (args.lambda_text * loss_text)

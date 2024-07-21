@@ -1,100 +1,90 @@
 import torch
 import torch.nn as nn
-#from transformer import CrossAttention, Transformer
+import torch.nn.functional as F
 
-coco_head_idx = [0, 1, 2, 3, 4]
-coco_left_arm_idx = [5, 7, 9]
-coco_right_arm_idx = [6, 8, 10]
-coco_left_leg_idx = [11, 13, 15]
-coco_right_leg_idx = [12, 14, 16]
+from .Part_refine import PartAttention
+from .CrossAtten import CoTransformer
+from .text_encoder import TEncoder
 
-class PartAttention(nn.Module):
-    def __init__(self, 
-                 data_type='coco', 
-                 seqlen=16,
-                 embed_dim=256):
+class Model(nn.Module):
+    def __init__(self, num_total_motion, seqlen) :
         super().__init__()
-        self.proj_input = nn.Linear(3, embed_dim)
-        # Part
-        self.head_idx = eval(f'{data_type}_head_idx')
-        self.left_arm_idx = eval(f'{data_type}_left_arm_idx')
-        self.right_arm_idx = eval(f'{data_type}_right_arm_idx')
-        self.left_leg_idx = eval(f'{data_type}_left_leg_idx')
-        self.right_leg_idx = eval(f'{data_type}_right_leg_idx')
-
-        self.head_conv = nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim//2,
-                                  kernel_size=(3, 5), padding=(1, 2))
-        self.left_arm_conv = nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim//2,
-                                  kernel_size=(3, 3), padding=(1, 1))
-        self.right_arm_conv = nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim//2,
-                                  kernel_size=(3, 3), padding=(1, 1))
-        self.left_leg_conv = nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim//2,
-                                  kernel_size=(3, 3), padding=(1, 1))
-        self.right_leg_conv = nn.Conv2d(in_channels=embed_dim, out_channels=embed_dim//2,
-                                  kernel_size=(3, 3), padding=(1, 1))
+        self.mid_frame = 8
+        self.num_words = 36
+        self.seqlen = seqlen
+        self.part_atten = PartAttention(embed_dim=256)
         
-        self.proj_dec = nn.Linear(embed_dim, embed_dim//2)
-        self.head_dec = nn.Conv1d(in_channels=10, out_channels=10//2, kernel_size=1)
-        self.left_arm_dec = nn.Conv1d(in_channels=6, out_channels=6//2, kernel_size=1)
-        self.right_arm_dec = nn.Conv1d(in_channels=6, out_channels=6//2, kernel_size=1)
-        self.left_leg_dec = nn.Conv1d(in_channels=6, out_channels=6//2, kernel_size=1)
-        self.right_leg_dec = nn.Conv1d(in_channels=6, out_channels=6//2, kernel_size=1)
+        self.text_encoder = TEncoder(depth=3, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
+        self.co_former = CoTransformer(seqlen=self.seqlen, num_joints=17, num_words=36 ,embed_dim=256)
+        
+        self.joint_head = nn.Sequential(
+            nn.LayerNorm(256),
+            nn.Linear(256, 3)
+        )
 
-        self.head_head = nn.Sequential(nn.LayerNorm(embed_dim//2), nn.Linear(embed_dim//2, 3))
-        self.head_left_arm = nn.Sequential(nn.LayerNorm(embed_dim//2), nn.Linear(embed_dim//2, 3))
-        self.head_right_arm = nn.Sequential(nn.LayerNorm(embed_dim//2), nn.Linear(embed_dim//2, 3))
-        self.head_left_leg = nn.Sequential(nn.LayerNorm(embed_dim//2), nn.Linear(embed_dim//2, 3))
-        self.head_right_leg = nn.Sequential(nn.LayerNorm(embed_dim//2), nn.Linear(embed_dim//2, 3))
+        self.text_head = nn.ModuleList([nn.Sequential(nn.Linear(256, 32), nn.ReLU(), nn.Dropout()),
+                                         nn.Linear(32*17, num_total_motion)])
 
-    def forward(self, pose):
+    def extraction_features(self, pose_2d, text_embeds, return_joint=False):
         """
-        pose : [B, T, J, c]
+        pose_2d         : [B, T, J, 2]
+        text_embeds     : [7693]
         """
-        B, T = pose.shape[:2]
-        full_body = self.proj_input(pose)
-
-        head = full_body[:, :, self.head_idx]            # [B, T, 5, 3]
-        left_arm = full_body[:, :, self.left_arm_idx]    # [B, T, 3, 3]
-        right_arm = full_body[:, :, self.right_arm_idx]  # [B, T, 3, 3]
-        left_leg = full_body[:, :, self.left_leg_idx]    # [B, T, 3, 3]
-        right_leg = full_body[:, :, self.right_leg_idx]  # [B, T, 3, 3]
-
-        # head
-        enc_head = self.head_conv(head.permute(0, -1, 1, 2)).permute(0, 2, 3, 1)     # [B, T, 5, c]
-        enc_left_arm = self.left_arm_conv(left_arm.permute(0, -1, 1, 2)).permute(0, 2, 3, 1)     # [B, T, 3, c]
-        enc_right_arm = self.right_arm_conv(right_arm.permute(0, -1, 1, 2)).permute(0, 2, 3, 1)  # [B, T, 3, c]
-        enc_left_leg = self.left_leg_conv(left_leg.permute(0, -1, 1, 2)).permute(0, 2, 3, 1)     # [B, T, 3, c]
-        enc_right_leg = self.right_leg_conv(right_leg.permute(0, -1, 1, 2)).permute(0, 2, 3, 1)  # [B, T, 3, c]
-
-        # Concat 
-        full_body = self.proj_dec(full_body)
-        proj_head = full_body[:, :, self.head_idx]            # [B, T, 5, c]
-        proj_left_arm = full_body[:, :, self.left_arm_idx]    # [B, T, 3, c]
-        proj_right_arm = full_body[:, :, self.right_arm_idx]  # [B, T, 3, c]
-        proj_left_leg = full_body[:, :, self.left_leg_idx]    # [B, T, 3, c]
-        proj_right_leg = full_body[:, :, self.right_leg_idx]  # [B, T, 3, c]
-
-        enc_head = torch.cat([proj_head, enc_head], dim=2)                 # [B, T, 3+3, c]
-        enc_left_arm = torch.cat([proj_left_arm, enc_left_arm], dim=2)     # [B, T, 3+3, c]
-        enc_right_arm = torch.cat([proj_right_arm, enc_right_arm], dim=2)  # [B, T, 3+3, c]
-        enc_left_leg = torch.cat([proj_left_leg, enc_left_leg], dim=2)     # [B, T, 3+3, c]
-        enc_right_leg = torch.cat([proj_right_leg, enc_right_leg], dim=2)  # [B, T, 3+3, c]
+        # Stage 1
+        joint_feat = self.st_fromer(pose_2d, return_joint=False)  # [B, T, J, dim] 
+        pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
+        max_pred_text = torch.argmax(pred_text, dim=-1)           # [B]
         
-        dec_head = self.head_dec(enc_head.reshape(B*T, 10, -1)).reshape(B, T, 5, -1)                     # [B, T, 5, c]
-        dec_left_arm = self.left_arm_dec(enc_left_arm.reshape(B*T, 6, -1)).reshape(B, T, 3, -1)         # [B, T, 3, c]
-        dec_right_arm = self.right_arm_dec(enc_right_arm.reshape(B*T, 6, -1)).reshape(B, T, 3, -1)      # [B, T, 3, c]
-        dec_left_leg = self.left_leg_dec(enc_left_leg.reshape(B*T, 6, -1)).reshape(B, T, 3, -1)         # [B, T, 3, c]
-        dec_right_leg = self.right_leg_dec(enc_right_leg.reshape(B*T, 6, -1)).reshape(B, T, 3, -1)      # [B, T, 3, c]
+        # Padding
+        text_emb, caption_mask = [], []
+        for idx in max_pred_text:
+            motion_feat = torch.tensor(text_embeds[idx][0])                  # [N, 768]
+            n = motion_feat.shape[0]
+            # Padding
+            motion_feat = torch.cat([motion_feat] + [torch.zeros_like(motion_feat[0:1]) for _ in range(self.num_words-n)], dim=0)
+            mask = torch.ones((self.num_words), device=pose_2d.device)
+            mask[:n] = 0.
 
-        pose[:, :, self.head_idx] += self.head_head(dec_head)
-        pose[:, :, self.left_arm_idx] += self.head_left_arm(dec_left_arm)
-        pose[:, :, self.right_arm_idx] += self.head_right_arm(dec_right_arm)
-        pose[:, :, self.left_leg_idx] += self.head_left_leg(dec_left_leg)
-        pose[:, :, self.right_leg_idx] += self.head_right_leg(dec_right_leg)
-        
-        return pose
-    
-pose2d = torch.rand((4, 16, 17, 3))
-model = PartAttention('coco')
+            text_emb.append(motion_feat)
+            caption_mask.append(mask)                # n
 
-model(pose2d).shape
+        text_emb = torch.stack(text_emb, dim=0).float().cuda()              # [B, N, 768]
+        caption_mask = torch.stack(caption_mask, dim=0).bool().cuda()       # [B, N]
+
+        #
+        text_feat = self.text_encoder(text_emb, caption_mask)               # [B, N, dim]
+        joint_feat = self.co_former(joint_feat, text_feat, caption_mask)    # [B, T, J, dim]             
+        if return_joint :
+            pred_kp_3d = self.joint_head(joint_feat)                        # [B, T, J, 3] 
+            return pred_kp_3d
+        else :
+            return joint_feat
+
+    def text_prediction(self, joint_feat):
+        """ Text predicting via joint features
+        joint_feat : [B, T, J, dim]
+        """
+        x = joint_feat.mean(dim=1)
+
+        x = self.text_head[0](x)               # [B, J, d]
+        x = x.flatten(-2)                      # [B, J*d]
+        x = self.text_head[1](x)               # [B, num_total_motion]
+
+        return x
+
+    def forward(self, pose_2d, text_emb, caption_mask):
+        """
+        pose_2d      : [B, T, J, 3] z=1
+        text_emb     : [B, N, 768]
+        caption_mask : [B, 36]
+        """
+        # Stage 1.
+        joint_feat = self.st_fromer(pose_2d, return_joint=False)  # [B, T, J, dim] 
+        pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
+
+        # Stage 2.
+        text_feat = self.text_encoder(text_emb, caption_mask)     # [B, N, dim]
+        joint_feat = self.co_former(joint_feat, text_feat, caption_mask)
+        pred_kp_3d = self.joint_head(joint_feat)                  # [B, T, J, 3] 
+
+        return pred_text, pred_kp_3d
