@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from transformer import Attention
+from .transformer import Attention
 from einops import rearrange
 
 coco_head_idx = [0, 1, 2, 3, 4]
@@ -69,12 +69,12 @@ class PartAttentionModule(nn.Module):
         
         return full_body
 
-class 
-
 class PartAttention(nn.Module):
     def __init__(self, data_type='coco', depth=4, embed_dim=256, num_joints=17, num_frames=16) :
         super().__init__()
         self.depth = depth
+        self.num_joints = num_joints
+        self.num_frames = num_frames
         self.proj_input = nn.Linear(2, embed_dim)
 
         # Part
@@ -87,7 +87,7 @@ class PartAttention(nn.Module):
         # Encoder 
         self.spatial_pos_embed = nn.Parameter(torch.zeros(1, num_joints, embed_dim))
         self.temporal_pos_embed = nn.Parameter(torch.zeros(1, num_frames, embed_dim))
-        self.pos_drop = nn.Dropout(p=drop_rate)
+        self.pos_drop = nn.Dropout()
 
         self.part_atten = nn.ModuleList(
             PartAttentionModule(embed_dim=embed_dim)
@@ -113,12 +113,12 @@ class PartAttention(nn.Module):
         self.head_left_leg = nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, 3))
         self.head_right_leg = nn.Sequential(nn.LayerNorm(embed_dim), nn.Linear(embed_dim, 3))
     
-    def output_head(self, refine_body):
-        refine_body[:, :, self.head_idx] = self.head_head(dec_head)
-        refine_body[:, :, self.left_arm_idx] = self.head_left_arm(dec_left_arm)
-        refine_body[:, :, self.right_arm_idx] = self.head_right_arm(dec_right_arm)
-        refine_body[:, :, self.left_leg_idx] = self.head_left_leg(dec_left_leg)
-        refine_body[:, :, self.right_leg_idx] = self.head_right_leg(dec_right_leg)
+    def output_head(self, refine_body, body_feature):
+        refine_body[:, :, self.head_idx] = self.head_head(body_feature[:, :, self.head_idx])
+        refine_body[:, :, self.left_arm_idx] = self.head_left_arm(body_feature[:, :, self.left_arm_idx])
+        refine_body[:, :, self.right_arm_idx] = self.head_right_arm(body_feature[:, :, self.right_arm_idx])
+        refine_body[:, :, self.left_leg_idx] = self.head_left_leg(body_feature[:, :, self.left_leg_idx])
+        refine_body[:, :, self.right_leg_idx] = self.head_right_leg(body_feature[:, :, self.right_leg_idx])
 
         return refine_body
 
@@ -126,21 +126,34 @@ class PartAttention(nn.Module):
         """
         pose_2d : [B, T, J, 2]
         """
-        full_body = self.proj_input(pose_2d)        # [B, T, J, 256]
         refine_body = torch.zeros_like(full_body, device=pose_2d.device)
 
-        for idx, (part, s_attn, t_attn) in enumerate(zip(self.part_atten, self.spatial_atten, self.temporal_atten)):
+        for idx, (part_attn, s_attn, t_attn) in enumerate(zip(self.part_atten, self.spatial_atten, self.temporal_atten)):
             if idx == 0 :
-            full_body = rearrange(full_body, 'b t j c  -> (b t) j c')
-            full_body = full_body + self.spatial_pos_embed
-            full_body = self.pos_drop(full_body)
-            full_body = s_attn[idx](full_body)
-            full_body = self.norm_s(full_body)
+                full_body = self.proj_input(pose_2d)        # [B, T, J, 256]
+                full_body = rearrange(full_body, 'b t j c -> (b t) j c')
+                full_body = full_body + self.spatial_pos_embed
+                full_body = self.pos_drop(full_body)
+                full_body = s_attn(full_body)
+                full_body = self.norm_s(full_body)
 
+                full_body = rearrange(full_body, '(b t) j c -> (b j) t c', t=self.num_frames)
+                full_body = full_body + self.temporal_pos_embed
+                full_body = self.pos_drop(full_body)
+                full_body = t_attn(full_body)
+                full_body = self.norm_t(full_body)
+            else :
+                full_body = rearrange(full_body, 'b t j c -> (b t) j c')
+                full_body = s_attn(full_body)
+                full_body = self.norm_s(full_body)
 
-
-
-
+                full_body = rearrange(full_body, '(b t) j c -> (b j) t c', t=self.num_frames)
+                full_body = t_attn(full_body)
+                full_body = self.norm_t(full_body)
+            
+            full_body = rearrange(full_body, '(b j) t c -> b t j c', j=self.num_joints)
+            full_body = part_attn(full_body)
         
+        refine_body = self.output_head(refine_body, full_body)
 
-        return
+        return refine_body
