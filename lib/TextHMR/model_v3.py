@@ -30,7 +30,7 @@ class Model(nn.Module):
                                     nn.ReLU())
         self.global_regressor = Regressor(512)
 
-        self.proj_local = nn.Sequential(nn.Linear(512+32*17, 256),
+        self.proj_local = nn.Sequential(nn.Linear(512+32*17, 512),
                                         nn.Linear(512, 256),
                                         nn.LayerNorm(256))
         self.local_encoder = Transformer(depth=2, embed_dim=256, mlp_hidden_dim=1024, 
