@@ -122,7 +122,7 @@ class PartAttention(nn.Module):
 
         return refine_body
 
-    def forward(self, pose_2d):
+    def forward(self, pose_2d, return_joint=False):
         """
         pose_2d : [B, T, J, 2]
         """
@@ -153,8 +153,10 @@ class PartAttention(nn.Module):
             global_body = rearrange(global_body, '(b j) t c -> b t j c', j=self.num_joints)
             local_body = part_attn(local_body)
             global_body = global_body + local_body
-        
-        refine_body = torch.zeros((B, T, J, 3), device=pose_2d.device)
-        refine_body = self.output_head(refine_body, global_body)
-
-        return refine_body
+    
+        if return_joint :
+            refine_body = torch.zeros((B, T, J, 3), device=pose_2d.device)
+            refine_body = self.output_head(refine_body, global_body)
+            return refine_body
+        else :
+            return global_body
