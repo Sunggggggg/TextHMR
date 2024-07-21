@@ -126,6 +126,7 @@ class PartAttention(nn.Module):
         """
         pose_2d : [B, T, J, 2]
         """
+        B, T, J = pose_2d.shape[:3]
         for idx, (part_attn, s_attn, t_attn) in enumerate(zip(self.part_atten, self.spatial_atten, self.temporal_atten)):
             if idx == 0 :
                 full_body = self.proj_input(pose_2d)        # [B, T, J, 256]
@@ -152,7 +153,7 @@ class PartAttention(nn.Module):
             full_body = rearrange(full_body, '(b j) t c -> b t j c', j=self.num_joints)
             full_body = part_attn(full_body)
         
-        refine_body = torch.zeros_like(full_body, device=pose_2d.device)
+        refine_body = torch.zeros((B, T, J, 3), device=pose_2d.device)
         refine_body = self.output_head(refine_body, full_body)
 
         return refine_body
