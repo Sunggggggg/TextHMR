@@ -25,6 +25,20 @@ class Model(nn.Module):
         self.pre_trained_model = pre_trained_model(num_total_motion, seqlen)
         self.regressor = Regressor(512+256*17)
 
+        self.aggregation = nn.Sequential(
+            nn.Conv1d(in_channels=seqlen//2, out_channels=seqlen//8),
+            nn.Tanh(),
+            nn.Conv1d(in_channels=seqlen//4, out_channels=1),
+            nn.Tanh()
+        )
+
+        self.fuse = nn.Sequential(
+            nn.Conv1d(in_channels=seqlen//2, out_channels=seqlen//8),
+            nn.Tanh(),
+            nn.Conv1d(in_channels=seqlen//4, out_channels=1),
+            nn.Tanh()
+        )
+
         if pretrained :
             pretrained_dict = torch.load(pretrained)['gen_state_dict']
 
@@ -47,6 +61,12 @@ class Model(nn.Module):
         img_feat = self.temp_encoder(img_feat)
         f = torch.cat([joint_feat, img_feat], dim=-1)       # [B, T, 512+32*J]
 
+        past_f = self.aggregation(f[:, :T//2])             # [B, 1, 512+32*J]
+        future_f = self.aggregation(f[:, T//2:])           # [B, 1, 512+32*J]
+        current_f = f[:, T//2 : T//2 + 1]                  # [B, 1, 512+32*J]
+
+        past_f
+        
         if is_train:
             f = f
         else :
