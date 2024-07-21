@@ -17,8 +17,8 @@ from lib.utils.utils import prepare_output_dir, create_logger, get_optimizer
 from lib.dataset._loaders_only3d import get_data_loaders
 from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
-from lib.core.loss_TextHMR import Loss
-from lib.core.trainer_TextHMR import Trainer
+from lib.core.loss_TextHMR_v3 import Loss
+from lib.core.trainer_TextHMR_v3 import Trainer
 from lib.TextHMR.model_v2 import Model
 
 def main(cfg):

@@ -4,7 +4,7 @@ import numpy as np
 from lib.utils.geometry import batch_rodrigues
 from lib.data_utils._kp_utils import convert_kps_torch
 
-class GLoTLoss(nn.Module):
+class Loss(nn.Module):
     def __init__(
             self,
             e_loss_weight=60.,
@@ -17,7 +17,7 @@ class GLoTLoss(nn.Module):
             use_accel=False,
             device='cuda',
     ):
-        super(GLoTLoss, self).__init__()
+        super(Loss, self).__init__()
         self.e_loss_weight = e_loss_weight
         self.e_3d_loss_weight = e_3d_loss_weight
         self.e_pose_loss_weight = e_pose_loss_weight
