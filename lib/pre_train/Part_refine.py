@@ -126,34 +126,35 @@ class PartAttention(nn.Module):
         """
         pose_2d : [B, T, J, 2]
         """
+        global_body = local_body = self.proj_input(pose_2d)        # [B, T, J, 256]
         B, T, J = pose_2d.shape[:3]
         for idx, (part_attn, s_attn, t_attn) in enumerate(zip(self.part_atten, self.spatial_atten, self.temporal_atten)):
             if idx == 0 :
-                full_body = self.proj_input(pose_2d)        # [B, T, J, 256]
-                full_body = rearrange(full_body, 'b t j c -> (b t) j c')
-                full_body = full_body + self.spatial_pos_embed
-                full_body = self.pos_drop(full_body)
-                full_body = s_attn(full_body)
-                full_body = self.norm_s(full_body)
+                global_body = rearrange(global_body, 'b t j c -> (b t) j c')
+                global_body = global_body + self.spatial_pos_embed
+                global_body = self.pos_drop(global_body)
+                global_body = s_attn(global_body)
+                global_body = self.norm_s(global_body)
 
-                full_body = rearrange(full_body, '(b t) j c -> (b j) t c', t=self.num_frames)
-                full_body = full_body + self.temporal_pos_embed
-                full_body = self.pos_drop(full_body)
-                full_body = t_attn(full_body)
-                full_body = self.norm_t(full_body)
+                global_body = rearrange(global_body, '(b t) j c -> (b j) t c', t=self.num_frames)
+                global_body = global_body + self.temporal_pos_embed
+                global_body = self.pos_drop(global_body)
+                global_body = t_attn(global_body)
+                global_body = self.norm_t(global_body)
             else :
-                full_body = rearrange(full_body, 'b t j c -> (b t) j c')
-                full_body = s_attn(full_body)
-                full_body = self.norm_s(full_body)
+                global_body = rearrange(global_body, 'b t j c -> (b t) j c')
+                global_body = s_attn(global_body)
+                global_body = self.norm_s(global_body)
 
-                full_body = rearrange(full_body, '(b t) j c -> (b j) t c', t=self.num_frames)
-                full_body = t_attn(full_body)
-                full_body = self.norm_t(full_body)
+                global_body = rearrange(global_body, '(b t) j c -> (b j) t c', t=self.num_frames)
+                global_body = t_attn(global_body)
+                global_body = self.norm_t(global_body)
             
-            full_body = rearrange(full_body, '(b j) t c -> b t j c', j=self.num_joints)
-            full_body = part_attn(full_body)
+            global_body = rearrange(global_body, '(b j) t c -> b t j c', j=self.num_joints)
+            local_body = part_attn(local_body)
+            global_body = global_body + local_body
         
         refine_body = torch.zeros((B, T, J, 3), device=pose_2d.device)
-        refine_body = self.output_head(refine_body, full_body)
+        refine_body = self.output_head(refine_body, global_body)
 
         return refine_body
