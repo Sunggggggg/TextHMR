@@ -15,7 +15,7 @@ class Model(nn.Module):
         self.part_atten = PartAttention_v2(depth=3, embed_dim=512, mlp_hidden_dim=2048, 
                  h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0.1, num_joints=17, num_frames=16)
         
-        self.text_encoder = TEncoder(depth=3, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
+        self.text_encoder = TEncoder(depth=2, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
         self.co_former = CoTransformer(seqlen=self.seqlen, num_joints=17, num_words=36 ,embed_dim=256)
         
         self.joint_head = nn.Sequential(
