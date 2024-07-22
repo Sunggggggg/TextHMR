@@ -196,7 +196,7 @@ class Trainer():
             start = time.time()
 
             summary_string = f'({i + 1}/{self.num_iters_per_epoch}) | Total: {bar.elapsed_td} | ETA: {bar.eta_td:} | loss: {losses.avg:.2f} ' \
-                             f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f} | lift: {lift_3d_loss.avg:.2f}' \
+                             f'| 2d: {kp_2d_loss.avg:.2f} | 3d: {kp_3d_loss.avg:.2f}' \
                              f'| 2d_accel: {kp_2d_accel_loss.avg:.2f} | 3d_accel: {kp_3d_accel_loss.avg:.2f} '
             
             for k,v in timer.items():
