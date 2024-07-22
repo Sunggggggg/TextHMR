@@ -82,7 +82,6 @@ class Block(nn.Module):
         self.norm2 = nn.LayerNorm(embed_dim)
         self.norm3 = nn.LayerNorm(embed_dim)
         self.norm4 = nn.LayerNorm(embed_dim)
-        self.norm5 = nn.LayerNorm(embed_dim)
         self.part_atten = PartAttentionModule(embed_dim=embed_dim)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
 
@@ -90,8 +89,7 @@ class Block(nn.Module):
             qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
         self.s_atten = Attention(dim=embed_dim, num_heads=num_heads, qkv_bias=qkv_bias, \
             qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
-        self.t_mlp = Mlp(in_features=embed_dim, hidden_features=embed_dim*2., drop=drop)
-        self.s_mlp = Mlp(in_features=embed_dim, hidden_features=embed_dim*2., drop=drop)
+        self.mlp = Mlp(in_features=embed_dim, hidden_features=embed_dim*2., drop=drop)
     
     def forward(self, x):
         """
@@ -102,11 +100,10 @@ class Block(nn.Module):
 
         x = rearrange(x, 'B T J C -> (B J) T C')
         x = x + self.drop_path(self.t_atten(self.norm2(x)))
-        x = x + self.drop_path(self.t_mlp(self.norm3(x)))
-
         x = rearrange(x, '(B J) T C -> (B T) J C', T=T, J=J)
-        x = x + self.drop_path(self.s_atten(self.norm4(x)))
-        x = x + self.drop_path(self.s_mlp(self.norm5(x)))
+        x = x + self.drop_path(self.s_atten(self.norm3(x)))
+
+        x = x + self.drop_path(self.mlp(self.norm4(x)))
         
         x = rearrange(x, '(B T) J C -> B T J C', T=T)
         return x
