@@ -12,7 +12,7 @@ class Model(nn.Module):
         self.mid_frame = 8
         self.num_words = 36
         self.seqlen = seqlen
-        self.part_atten = PartAttention_v2(depth=3, embed_dim=512, mlp_hidden_dim=2048, 
+        self.part_atten = PartAttention_v2(depth=3, embed_dim=256, mlp_hidden_dim=256*4., 
                  h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0.1, num_joints=17, num_frames=16)
         
         self.text_encoder = TEncoder(depth=2, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)

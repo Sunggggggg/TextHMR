@@ -133,6 +133,8 @@ class PartAttention_v2(nn.Module):
 
         #    
     def forward(self, x):
+        x = self.embeding(x)
+        
         x = x + self.temporal_pos_embed[:, :, None].tile(1, 1, self.num_joints, 1) \
             + self.spatial_pos_embed[:, None, :].tile(1, self.num_frames, 1, 1)
         
