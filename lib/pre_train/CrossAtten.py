@@ -159,7 +159,7 @@ class CoTransformer(nn.Module):
             + self.spa_pos_emb[:, None, :].tile(1, self.seqlen, 1, 1)
         joint_feat = joint_feat.reshape(B, T*J, C)
 
-        text_feat = text_feat.mean(dim=1) + self.text_pos_emb           # [B, 1, dim]
+        text_feat = text_feat.mean(dim=1, keepdim=True) + self.text_pos_emb           # [B, 1, dim]
 
         #atten_mask = self.get_attention_mask(caption_mask ,T*J)        #
 
