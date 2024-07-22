@@ -6,7 +6,7 @@ from lib.models.smpl import SMPL, SMPL_MODEL_DIR, SMPL_MEAN_PARAMS, H36M_TO_J14
 from lib.utils.geometry import rotation_matrix_to_angle_axis, rot6d_to_rotmat
 
 class SMPLRegressor(nn.Module):
-    def __init__(self, dim_rep=512, num_joints=17, hidden_dim=2048, dropout_ratio=0.):
+    def __init__(self, dim_rep=256, num_joints=17, hidden_dim=2048, dropout_ratio=0.):
         super(SMPLRegressor, self).__init__()
         param_pose_dim = 24 * 6
 
