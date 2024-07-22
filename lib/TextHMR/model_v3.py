@@ -23,7 +23,7 @@ class Model(nn.Module):
         self.temp_encoder = Transformer(depth=3, embed_dim=512, mlp_hidden_dim=2048, 
                                         h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=64)
         self.pre_trained_model = pre_trained_model(num_total_motion, seqlen)
-        self.regressor = SMPLRegressor(dim_rep=512)
+        self.regressor = SMPLRegressor(dim_rep=256)
 
         if pretrained :
             pretrained_dict = torch.load(pretrained)['gen_state_dict']
