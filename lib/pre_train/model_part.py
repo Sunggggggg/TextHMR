@@ -13,7 +13,7 @@ class Model(nn.Module):
         self.num_words = 36
         self.seqlen = seqlen
         self.part_atten = PartAttention_v2(depth=3, embed_dim=256, mlp_hidden_dim=256*4., 
-                 h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0.1, num_joints=17, num_frames=16)
+                 h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0.1, num_joints=17, num_frames=seqlen)
         
         self.text_encoder = TEncoder(depth=2, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
         self.co_former = CoTransformer(seqlen=self.seqlen, num_joints=17, num_words=36 ,embed_dim=256)
