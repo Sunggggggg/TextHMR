@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .Part_refine import PartAttention
+from .Part_refine import PartAttention_v2
 from .CrossAtten import CoTransformer
 from .text_encoder import TEncoder
 
@@ -12,7 +12,8 @@ class Model(nn.Module):
         self.mid_frame = 8
         self.num_words = 36
         self.seqlen = seqlen
-        self.part_atten = PartAttention(embed_dim=256, num_frames=seqlen)
+        self.part_atten = PartAttention_v2(depth=3, embed_dim=512, mlp_hidden_dim=2048, 
+                 h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0.1, num_joints=17, num_frames=16)
         
         self.text_encoder = TEncoder(depth=3, embed_dim=256, mlp_hidden_dim=256*4., h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=36)
         self.co_former = CoTransformer(seqlen=self.seqlen, num_joints=17, num_words=36 ,embed_dim=256)
@@ -75,8 +76,8 @@ class Model(nn.Module):
         caption_mask : [B, 36]
         """
         # Stage 1.
-        joint_feat = self.part_atten(pose_2d, return_joint=False)  # [B, T, J, dim] 
-        pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
+        joint_feat = self.part_atten(pose_2d, return_joint=False)   # [B, T, J, dim] 
+        pred_text = self.text_prediction(joint_feat)                # [B, num_total_motion]
 
         # Stage 2.
         text_feat = self.text_encoder(text_emb, caption_mask)     # [B, N, dim]

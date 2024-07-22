@@ -125,12 +125,12 @@ class CrossAttentionBlock(nn.Module):
 class CoTransformer(nn.Module):
     def __init__(self, seqlen=16, num_joints=17, num_words=16 ,embed_dim=256,):
         super().__init__()
-        depth = 6
+        depth = 4
         self.seqlen = seqlen
         self.num_joints = num_joints
         self.temp_pos_emb = nn.Parameter(torch.rand((1, seqlen, embed_dim)))
         self.spa_pos_emb = nn.Parameter(torch.rand((1, num_joints, embed_dim)))
-        self.text_pos_emb = nn.Parameter(torch.rand((1, num_words, embed_dim)))
+        self.text_pos_emb = nn.Parameter(torch.rand((1, 1, embed_dim)))
 
         self.block = nn.ModuleList([
             Block(dim=256, num_heads=8, mlp_hidden_dim=256*4., qkv_bias=True, 
@@ -157,17 +157,17 @@ class CoTransformer(nn.Module):
         # Pos embedding
         joint_feat = joint_feat + self.temp_pos_emb[:, :, None].tile(1, 1, self.num_joints, 1) \
             + self.spa_pos_emb[:, None, :].tile(1, self.seqlen, 1, 1)
-
         joint_feat = joint_feat.reshape(B, T*J, C)
-        text_feat = text_feat + self.text_pos_emb
 
-        atten_mask = self.get_attention_mask(caption_mask ,T*J)
+        text_feat = text_feat.mean(dim=1) + self.text_pos_emb           # [B, 1, dim]
 
-        x = torch.cat([joint_feat, text_feat], dim=1)
+        #atten_mask = self.get_attention_mask(caption_mask ,T*J)        #
+
+        x = torch.cat([text_feat, joint_feat], dim=1)                   # [B, 1+TJ, dim]
         for blk in self.block:
-            x = blk(x, atten_mask)
+            x = blk(x)
 
         x = self.norm(x)
 
-        x = x[:, :T*J].reshape(B, T, J, -1)
+        x = x[:, 1:].reshape(B, T, J, -1)
         return x

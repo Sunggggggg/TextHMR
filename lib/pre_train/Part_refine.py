@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-from .transformer import Attention
+from .transformer import Attention, Mlp
 from einops import rearrange
+from timm.models.layers import DropPath
 
 coco_head_idx = [0, 1, 2, 3, 4]
 coco_left_arm_idx = [5, 7, 9]
@@ -44,7 +45,11 @@ class PartAttentionModule(nn.Module):
 
     def forward(self, full_body):
         """
-        full_body : [B, T, J, dim]
+        full_body
+            [B, T, J, dim]
+
+        return 
+            [B, T, J, dim]
         """
         B, T = full_body.shape[:2]
         head = full_body[:, :, self.head_idx]            # [B, T, 5, 256]
@@ -61,13 +66,84 @@ class PartAttentionModule(nn.Module):
         enc_right_leg = self.right_leg_conv(right_leg.permute(0, -1, 1, 2)).permute(0, 2, 3, 1)  # [B, T, 3, 256]
 
         # Skip
-        full_body[:, :, self.head_idx] = head + enc_head
-        full_body[:, :, self.left_arm_idx] = left_arm + enc_left_arm
-        full_body[:, :, self.right_arm_idx] = right_arm + enc_right_arm
-        full_body[:, :, self.left_leg_idx] = left_leg + enc_left_leg
-        full_body[:, :, self.right_leg_idx] = right_leg + enc_right_leg
+        full_body[:, :, self.head_idx] = enc_head
+        full_body[:, :, self.left_arm_idx] = enc_left_arm
+        full_body[:, :, self.right_arm_idx] = enc_right_arm
+        full_body[:, :, self.left_leg_idx] = enc_left_leg
+        full_body[:, :, self.right_leg_idx] = enc_right_leg
         
         return full_body
+
+class Block(nn.Module):
+    def __init__(self, embed_dim, num_heads=8, qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
+                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm):
+        super().__init__()
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.norm3 = nn.LayerNorm(embed_dim)
+        self.norm4 = nn.LayerNorm(embed_dim)
+        self.norm5 = nn.LayerNorm(embed_dim)
+        self.part_atten = PartAttentionModule(embed_dim=embed_dim)
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+        self.t_atten = Attention(dim=embed_dim, num_heads=num_heads, qkv_bias=qkv_bias, \
+            qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
+        self.s_atten = Attention(dim=embed_dim, num_heads=num_heads, qkv_bias=qkv_bias, \
+            qk_scale=qk_scale, attn_drop=attn_drop, proj_drop=drop)
+        self.t_mlp = Mlp(in_features=embed_dim, hidden_features=embed_dim*2., drop=drop)
+        self.s_mlp = Mlp(in_features=embed_dim, hidden_features=embed_dim*2., drop=drop)
+    
+    def forward(self, x):
+        """
+        full_body(x) : [B, T, J, dim]
+        """
+        B, T, J = x.shape[:3]
+        x = x + self.drop_path(self.part_atten(self.norm1(x)))
+
+        x = rearrange(x, 'B T J C -> (B J) T C')
+        x = x + self.drop_path(self.t_atten(self.norm2(x)))
+        x = x + self.drop_path(self.t_mlp(self.norm3(x)))
+
+        x = rearrange(x, '(B J) T C -> (B T) J C', T=T, J=J)
+        x = x + self.drop_path(self.s_atten(self.norm4(x)))
+        x = x + self.drop_path(self.s_mlp(self.norm5(x)))
+        
+        x = rearrange(x, '(B T) J C -> B T J C', T=T)
+        return x
+
+
+class PartAttention_v2(nn.Module):
+    def __init__(self, depth=3, embed_dim=512, mlp_hidden_dim=1024, 
+                 h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., num_joints=17, num_frames=16) :
+        super().__init__()
+        self.num_joints = num_joints
+        self.num_frames = num_frames
+        qkv_bias = True
+        qk_scale = None
+
+        # 
+        self.embeding = nn.Linear(2, embed_dim)
+        self.spatial_pos_embed = nn.Parameter(torch.zeros(1, num_joints, embed_dim))
+        self.temporal_pos_embed = nn.Parameter(torch.zeros(1, num_frames, embed_dim))
+        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  
+
+        self.blocks = nn.ModuleList([
+            Block(dim=embed_dim, num_heads=h, mlp_hidden_dim=mlp_hidden_dim, qkv_bias=qkv_bias, qk_scale=qk_scale,
+                drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[i], norm_layer=nn.LayerNorm)
+            for i in range(depth)
+        ])
+        self.norm = nn.LayerNorm(embed_dim)
+
+        #    
+    def forward(self, x):
+        x = x + self.temporal_pos_embed[:, :, None].tile(1, 1, self.num_joints, 1) \
+            + self.spatial_pos_embed[:, None, :].tile(1, self.num_frames, 1, 1)
+        
+        for blk in self.blocks:
+            x = blk(x)
+        x = self.norm(x)
+
+        return x
 
 class PartAttention(nn.Module):
     def __init__(self, data_type='coco', depth=4, embed_dim=256, num_joints=17, num_frames=16) :

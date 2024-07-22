@@ -12,7 +12,8 @@ class Model(nn.Module):
                  seqlen,
                  num_total_motion,
                  text_archive,
-                 pretrained) :
+                 pretrained,
+                 pretrained_freeze=True) :
         super().__init__()
         self.seqlen = seqlen
         self.text_archive = text_archive
@@ -42,6 +43,10 @@ class Model(nn.Module):
 
             self.pre_trained_model.load_state_dict(pretrained_dict)
             print(f'=> loaded pretrained model from \'{pretrained}\'')
+        
+        if pretrained_freeze :
+            for p in self.pre_trained_model.parameters():
+                p.requires_grad = False
     
     def forward(self, f_img, pose_2d, is_train=False, J_regressor=None):
         """
