@@ -189,7 +189,7 @@ class Trainer():
             kp_3d_loss.update(loss_dict['loss_kp_3d_init'].item(), input_feat.size(0))
             kp_2d_accel_loss.update(loss_dict['loss_accel_2d_init'].item(), input_feat.size(0))
             kp_3d_accel_loss.update(loss_dict['loss_accel_3d_init'].item(), input_feat.size(0))
-            lift_3d_loss.update(loss_dict['loss_lift_3d'].item(), input_feat.size(0))
+            #lift_3d_loss.update(loss_dict['loss_lift_3d'].item(), input_feat.size(0))
 
             timer['backward'] = time.time() - start
             timer['batch'] = timer['data'] + timer['forward'] + timer['loss'] + timer['backward']
