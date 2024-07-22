@@ -23,7 +23,7 @@ class SMPLRegressor(nn.Module):
         self.relu3 = nn.ReLU(inplace=True)
         self.head_pose = nn.Linear(hidden_dim, param_pose_dim)
         self.head_shape = nn.Linear(hidden_dim, 10)
-        self.head_cam = nn.Linear(dim_rep, 3)
+        self.head_cam = nn.Linear(hidden_dim, 3)
         nn.init.xavier_uniform_(self.head_pose.weight, gain=0.01)
         nn.init.xavier_uniform_(self.head_shape.weight, gain=0.01)
         nn.init.xavier_uniform_(self.head_cam.weight, gain=0.01)
