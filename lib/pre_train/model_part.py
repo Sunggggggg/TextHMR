@@ -32,7 +32,7 @@ class Model(nn.Module):
         text_embeds     : [7693]
         """
         # Stage 1
-        joint_feat = self.part_atten(pose_2d, return_joint=False)  # [B, T, J, dim] 
+        joint_feat = self.part_atten(pose_2d)  # [B, T, J, dim] 
         pred_text = self.text_prediction(joint_feat)              # [B, num_total_motion]
         max_pred_text = torch.argmax(pred_text, dim=-1)           # [B]
         
