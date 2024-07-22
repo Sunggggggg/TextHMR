@@ -70,6 +70,7 @@ class SMPLRegressor(nn.Module):
         pred_shape = pred_shape.expand(T, B, -1).permute(1, 0, 2).reshape(BT, -1)
 
         # Cam
+        img_feat = img_feat.reshape(BT, -1)
         img_feat = self.dropout(img_feat)
         img_feat = self.fc3(img_feat)
         img_feat = self.bn3(img_feat)
