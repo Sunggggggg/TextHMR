@@ -19,7 +19,7 @@ from lib.utils.slerp_filter_utils import quaternion_from_matrix, quaternion_sler
 from lib.utils.renderer import Renderer
 
 from lib.dataset._motion_dataset import read_pkl
-from lib.TextHMR.model_v2 import Model
+from lib.TextHMR.model_v3 import Model
 
 def get_sequence(start_index, end_index, seqlen=16):
     if end_index - start_index + 1 == seqlen:
