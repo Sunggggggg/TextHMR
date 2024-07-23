@@ -269,12 +269,17 @@ if __name__ == "__main__":
 
             """ Rendering """
             if render:
-                num_frames_to_render = 200
+                num_frames_to_render = 1000
                 imgname = dataset_data[seq_name]['imgname']
+                for n in range(len(imgname)):
+                    imgname[n] = "/mnt/SKY/" + imgname[n][2:]
                 bbox = dataset_data[seq_name]['bbox']
                 pred_cam = np.vstack(pred_thetas).astype(np.float32)[:, :3]
                 img = cv2.imread(imgname[0])
-                orig_height, orig_width = img.shape[:2]
+                if img is None :
+                    continue
+                else :
+                    orig_height, orig_width = img.shape[:2]
                 renderer = Renderer(resolution=(orig_width, orig_height), orig_img=True, wireframe=False)
 
                 if target_dataset == 'h36m':
