@@ -117,16 +117,16 @@ if __name__ == "__main__":
     Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     if target_dataset == '3dpw':
-        data_path = f'/mnt/SKY/V_HMR/data/preprocessed_data/FullFrame_vitpose_r5064/{target_dataset}_{set}_db_clip.pt'
+        data_path = f'/mnt/SKY/V_HMR/data/preprocessed_data/FullFrame_vitpose_r5064/{target_dataset}_{set}_db.pt'
         #caption_path = f'/mnt/SKY/V_HMR/data/preprocessed_data/Video_caption/{target_dataset}_train_caption.pt'
     elif target_dataset == 'h36m':
         if cfg.TITLE == 'repr_table4_h36m_mpii3d_model':
-            data_path = f'/mnt/SKY/preprocessed_data/{target_dataset}_{set}_25fps_db_clip.pt'  # Table 4
+            data_path = f'/mnt/SKY/preprocessed_data/{target_dataset}_{set}_25fps_db.pt'  # Table 4
         elif cfg.TITLE == 'repr_table6_h36m_model':
             data_path = f'/mnt/SKY/preprocessed_data/{target_dataset}_{set}_front_25fps_tight_db.pt'  # Table 6
     elif target_dataset == 'mpii3d':
         set = 'val'
-        data_path = f'/mnt/SKY/preprocessed_data/{target_dataset}_{set}_scale12_db_clip.pt'  #
+        data_path = f'/mnt/SKY/preprocessed_data/{target_dataset}_{set}_scale12_db.pt'  #
     else:
         print("Wrong target dataset! Exiting...")
         import sys; sys.exit()
