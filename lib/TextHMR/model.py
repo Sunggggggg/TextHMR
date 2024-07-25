@@ -41,7 +41,7 @@ class Model(nn.Module):
     def forward(self, f_img, pose_2d, is_train=False, J_regressor=None):
         
         B, T, J = pose_2d.shape[:3]
-        start, end = (T//2-8), (T//2+9) 
+        start, end = (T//2-8), (T//2+8) 
         # Motion feat.
         motion_feat = self.motion_encoder(pose_2d)  # [B, T, J, dim]
         motion_feat = motion_feat[:, start:end]     # [B, 16, J, dim]
