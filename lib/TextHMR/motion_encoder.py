@@ -155,7 +155,7 @@ class GraphormerNet(nn.Module):
         x = self.norm_t(x)
         return x
 
-    def forward(self, x):
+    def forward(self, x, return_joint=False):
         b, t, j, c = x.shape
         x = self.SpaTemHead(x) # bj t c
         
@@ -170,8 +170,13 @@ class GraphormerNet(nn.Module):
             x = self.norm_t(x)
 
         x = rearrange(x, '(b j) t c -> b t j c', j=j)
-        x = self.regression(x) # (b t (j * 3))
-        x = x.view(b, t, j, -1)
+        if return_joint :
+            x = self.regression(x) # (b t (j * 3))
+            x = x.view(b, t, j, -1)
+            return x
+        else :
+            x = x.view(b, t, j, -1)
+            return x
         #x = self.fusion(x).reshape(b, t, j, -1)
 
-        return x
+        
