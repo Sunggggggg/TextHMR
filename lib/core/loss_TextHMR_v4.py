@@ -54,11 +54,11 @@ class Loss(nn.Module):
         w_smpl = data_3d['w_smpl'].type(torch.bool)
 
         # 
-        #real_2d = real_2d[:, seq_len // 2: seq_len // 2 + 1]
-        #real_3d = data_3d['kp_3d'][:, seq_len // 2: seq_len // 2 + 1]
-        #real_3d_theta = data_3d['theta'][:, seq_len // 2: seq_len // 2 + 1]
-        #w_3d = data_3d['w_3d'].type(torch.bool)[:, seq_len // 2: seq_len // 2 + 1]
-        #w_smpl = data_3d['w_smpl'].type(torch.bool)[:, seq_len // 2: seq_len // 2 + 1]
+        real_2d = real_2d[:, seq_len // 2-8: seq_len // 2 + 8]
+        real_3d = data_3d['kp_3d'][:, seq_len // 2-8: seq_len // 2 + 8]
+        real_3d_theta = data_3d['theta'][:, seq_len // 2-8: seq_len // 2 + 8]
+        w_3d = data_3d['w_3d'].type(torch.bool)[:, seq_len // 2-8: seq_len // 2 + 8]
+        w_smpl = data_3d['w_smpl'].type(torch.bool)[:, seq_len // 2-8: seq_len // 2 + 8]
         loss_kp_2d_short, loss_kp_3d_short, loss_accel_2d_short, loss_accel_3d_short, loss_pose_short, loss_shape_short = self.cal_loss(sample_2d_count, \
             real_2d, real_3d, real_3d_theta, w_3d, w_smpl, reduce, flatten, generator_outputs_short)
 
