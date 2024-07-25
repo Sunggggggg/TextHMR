@@ -55,7 +55,7 @@ class Model(nn.Module):
 
         # 
         feat = torch.cat([motion_feat, img_feat], dim=-1)
-        feat = self.gru(feat)
+        feat, _ = self.gru(feat)
         feat = self.proj_dec(feat)
         
         if is_train:
