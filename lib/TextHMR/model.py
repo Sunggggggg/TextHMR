@@ -24,7 +24,7 @@ class Model(nn.Module):
         
         self.proj_joint = nn.Linear(256, 32)
         self.gru = nn.GRU(input_size=512+32*17, hidden_size=1024, bidirectional=True, num_layers=2)
-        self.proj_dec = nn.Linear(512+32*17, 256)
+        self.proj_dec = nn.Linear(2048, 256)
         self.regressor = Regressor(256)
 
         if pretrained :
