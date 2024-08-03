@@ -27,7 +27,13 @@ class Model(nn.Module):
         if chk_filename:
             print('Loading checkpoint', chk_filename)
             checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage)
-            model_backbone.load_state_dict(checkpoint['model_pos'], strict=True)
+
+            new_state_dict = {}
+            for n, v in checkpoint['model_pos'].items():
+                name = n.replace("module.","") # .module이 중간에 포함된 형태라면 (".module","")로 치환
+                new_state_dict[name] = v
+            
+            model_backbone.load_state_dict(new_state_dict, strict=True)
             
             if pretrained_freeze :
                 for p in model_backbone.parameters():
