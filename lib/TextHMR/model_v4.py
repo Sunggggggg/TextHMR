@@ -80,8 +80,3 @@ class Model(nn.Module):
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
 
         return global_smpl_output, None
-
-
-
-
-        return
