@@ -55,7 +55,7 @@ JOINT_REGRESSOR_TRAIN_EXTRA = osp.join(BASE_DATA_DIR, 'J_regressor_extra.npy')
 SMPL_MEAN_PARAMS = osp.join(BASE_DATA_DIR, 'smpl_mean_params.npz')
 SMPL_MODEL_DIR = BASE_DATA_DIR
 H36M_TO_J17 = [6, 5, 4, 1, 2, 3, 16, 15, 14, 11, 12, 13, 8, 10, 0, 7, 9]
-H36M_TO_J14 = H36M_TO_J17[:14]
+H36M_TO_J14 = H36M_TO_J17[:14]  # 6, 5, 4, 1, 2, 3, 16, 15, 14, 11, 12, 13, 8, 10
 
 
 class SMPL(_SMPL):
