@@ -10,6 +10,7 @@ import random
 import numpy as np
 import pandas as pd
 
+import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from lib.dataset._motion_dataset import read_pkl
 from lib.core.config import parse_args
@@ -63,6 +64,10 @@ def main(cfg):
     # ========= Model ========= #
     model = Model().to(cfg.DEVICE)
     logger.info(f'net: {model}')
+
+    if torch.cuda.is_available():
+        model_backbone = nn.DataParallel(model_backbone)
+        model_backbone = model_backbone.cuda()
 
     if cfg.TRAIN.PRETRAINED :
         pretrained_dict = torch.load(cfg.TRAIN.PRETRAINED)['gen_state_dict']

@@ -121,7 +121,7 @@ def parse_args():
 
     args = parser.parse_args()
     print(args, end='\n\n')
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    #os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     cfg_file = args.cfg
     if args.cfg is not None:
         cfg = update_cfg(args.cfg)
