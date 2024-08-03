@@ -19,7 +19,7 @@ from lib.utils.lr_scheduler import CosineAnnealingWarmupRestarts
 
 from lib.core.loss_TextHMR_v4 import Loss
 from lib.core.trainer_TextHMR_v4 import Trainer
-from lib.TextHMR.model import Model
+from lib.TextHMR.model_v4 import Model
 
 def main(cfg):
     if cfg.SEED_VALUE >= 0:
@@ -61,7 +61,7 @@ def main(cfg):
     )
 
     # ========= Model ========= #
-    model = Model(cfg.DATASET.SEQLEN, 0, 0, cfg.TEXT.PRETRAINED).to(cfg.DEVICE)
+    model = Model().to(cfg.DEVICE)
     logger.info(f'net: {model}')
 
     if cfg.TRAIN.PRETRAINED :

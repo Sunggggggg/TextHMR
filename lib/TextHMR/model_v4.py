@@ -10,7 +10,7 @@ from .regressor import Regressor
 class Model(nn.Module):
     def __init__(self, 
                  chk_filename='/mnt/SKY/MotionBERT/checkpoint/latest_epoch.bin',
-                 pretrained_freeze=False) :
+                 pretrained_freeze=True) :
         super().__init__()
         model_backbone = DSTformer(dim_in=3, dim_out=3, dim_feat=256, dim_rep=512, 
                                    depth=5, num_heads=8, mlp_ratio=4., norm_layer=partial(nn.LayerNorm, eps=1e-6), 
