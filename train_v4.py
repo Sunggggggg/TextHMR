@@ -66,8 +66,8 @@ def main(cfg):
     logger.info(f'net: {model}')
 
     if torch.cuda.is_available():
-        model_backbone = nn.DataParallel(model_backbone)
-        model_backbone = model_backbone.cuda()
+        model = nn.DataParallel(model)
+        model = model.cuda()
 
     if cfg.TRAIN.PRETRAINED :
         pretrained_dict = torch.load(cfg.TRAIN.PRETRAINED)['gen_state_dict']
