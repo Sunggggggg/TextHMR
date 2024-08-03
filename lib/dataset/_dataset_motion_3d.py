@@ -30,6 +30,33 @@ from lib.data_utils._moition_utils import crop_scale_2d, crop_scale_3d
 
 logger = logging.getLogger(__name__)
 
+def coco2h36m(joint):
+    '''
+    joint : [T, J, 3]
+    '''
+    new_joint = np.zeros_like(joint)
+
+    new_joint[:, 0] = (joint[:, 11] + joint[:, 12]) / 2 # Hip
+    new_joint[:, 1] = joint[:, 12]                      # RHip
+    new_joint[:, 2] = joint[:, 14]                      # Rknee
+    new_joint[:, 3] = joint[:, 16]                      # Rfoot
+    new_joint[:, 4] = joint[:, 11]                      # LHip
+    new_joint[:, 5] = joint[:, 13]                      # Lknee
+    new_joint[:, 6] = joint[:, 15]                      # Lfoot
+    
+    new_joint[:, 8] = (joint[:, 5] + joint[:, 6]) / 2   # Neck
+    new_joint[:, 9] = joint[:, 0]                       # Nose
+    new_joint[:, 10] = joint[:, 2]                       # Htop
+    new_joint[:, 11] = joint[:, 5]                       # Lsh
+    new_joint[:, 12] = joint[:, 7]                       # Lel
+    new_joint[:, 13] = joint[:, 9]                       # Lhand
+    new_joint[:, 14] = joint[:, 6]                       # Rsh
+    new_joint[:, 15] = joint[:, 8]                       # Rel
+    new_joint[:, 16] = joint[:, 10]                       # Rhand
+
+    new_joint[:, 7] = (new_joint[:, 0] + new_joint[:, 8])/2
+
+    return new_joint
 
 class Dataset3D(Dataset):
     def __init__(self, load_opt, set, seqlen, overlap=0., folder=None, dataset_name=None, debug=False, target_vid=''):
@@ -201,7 +228,7 @@ class Dataset3D(Dataset):
         input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
         
         # ViTpose
-        inp_vitpose = crop_scale_2d(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
+        inp_vitpose = coco2h36m(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
         inp_vitpose = torch.from_numpy(inp_vitpose).float()
         
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)
