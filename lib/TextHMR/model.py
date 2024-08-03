@@ -1,63 +1,70 @@
-import os
 import torch
 import torch.nn as nn
-import pandas as pd
-
+from .motion_encoder import GraphormerNet as motionencoder
 from .regressor import Regressor
-from .transformer import Transformer
-from lib.dataset._motion_dataset import read_pkl
-from lib.pre_train.model import Model as pre_trained_model
-
-# ========= Text embedding ========= #
-data_root = '/mnt/SKY/AMASS_proc/processed_16frames/'
-# text_candidate = pd.read_csv(os.path.join(data_root, 'total_description.csv'), header=None)
-# text_candidate = list(text_candidate[0][1:])
-text_embeds = read_pkl(os.path.join(data_root, 'total_description_embedding.pkl'))
+from .operation.transformer import Transformer
 
 class Model(nn.Module):
-    def __init__(self, 
-                 num_total_motion, 
-                 pretrained='/mnt/SKY/TextHMR/pre_trained_experiment/pre_train/Epoch95_checkpoint.pth.tar') :
+    def __init__(self,
+                 seqlen,
+                 num_total_motion,
+                 text_archive,
+                 pretrained,
+                 pretrained_freeze=True
+                 ) :
         super().__init__()
-        self.proj_img = nn.Linear(2048, 512)
-        self.proj_joint = nn.Linear(256, 32)
+        self.seqlen = seqlen
+        self.text_archive = text_archive
 
-        self.temp_encoder = Transformer(depth=3, embed_dim=512, mlp_hidden_dim=1024, 
+        self.motion_encoder = motionencoder(num_frames=64, num_joints=17, embed_dim=256, depth=10)
+        
+        self.proj_enc = nn.Linear(2048, 512)
+        self.temp_encoder = Transformer(depth=3, embed_dim=512, mlp_hidden_dim=512*4., 
                                         h=8, drop_rate=0.1, drop_path_rate=0.2, attn_drop_rate=0., length=16)
-        self.pre_trained_model = pre_trained_model(num_total_motion)
-        self.regressor = Regressor(512+32*17)
+        
+        self.proj_joint = nn.Linear(256, 32)
+        self.gru = nn.GRU(input_size=512+32*17, hidden_size=1024, bidirectional=True, num_layers=2)
+        self.proj_dec = nn.Linear(2048, 256)
+        self.regressor = Regressor(256)
 
         if pretrained :
             pretrained_dict = torch.load(pretrained)['gen_state_dict']
 
-            self.pre_trained_model.load_state_dict(pretrained_dict)
+            self.motion_encoder.load_state_dict(pretrained_dict)
             print(f'=> loaded pretrained model from \'{pretrained}\'')
-    
+
+        if pretrained_freeze :
+            self.motion_encoder.eval()
+            for p in self.motion_encoder.parameters():
+                p.requires_grad = False
+
     def forward(self, f_img, pose_2d, is_train=False, J_regressor=None):
-        """
-        pose_2d     : [B, T, J, 3]
-        img_feat    : [B, T, 2048]
-        """
-        B, T = f_img.shape[:2]
-        pose_2d = pose_2d[..., :2]
+        
+        B, T, J = pose_2d.shape[:3]
+        start, end = (T//2-8), (T//2+8) 
+        # Motion feat.
+        motion_feat = self.motion_encoder(pose_2d)  # [B, T, J, dim]
+        motion_feat = motion_feat[:, start:end]     # [B, 16, J, dim]
+        motion_feat = self.proj_joint(motion_feat)  # [B, 16, J, 32]
+        motion_feat = motion_feat.flatten(-2)
+        
+        # Image feat.
+        f_img = f_img[:, start:end]                 # [B, 16, 2048]
+        img_feat = self.proj_enc(f_img)                     
+        img_feat = self.temp_encoder(img_feat)      # [B, T, 512] 
 
-        joint_feat = self.pre_trained_model.extraction_features(pose_2d, text_embeds)   # [B, T, J, dim]
-        joint_feat = self.proj_joint(joint_feat)            # [B, T, J, 32]
-        joint_feat = joint_feat.flatten(-2)                 # [B, T, 32*J]
-
-        img_feat = self.proj_img(f_img)
-        img_feat = self.temp_encoder(img_feat)
-        f = torch.cat([joint_feat, img_feat], dim=-1)       # [B, T, 512+32*J]
-
+        # 
+        feat = torch.cat([motion_feat, img_feat], dim=-1)
+        feat, _ = self.gru(feat)
+        feat = self.proj_dec(feat)
+        
         if is_train:
-            f = f
+            feat = feat
         else :
-            f = f[:, T//2 : T//2 + 1]
+            feat = feat[:, 16//2][:, None]
 
+        smpl_output, _ = self.regressor(feat, is_train=is_train, J_regressor=J_regressor)
 
-        smpl_output = self.regressor(f, is_train=is_train, J_regressor=J_regressor)
-
-        scores = None
         if not is_train:
             for s in smpl_output:
                 s['theta'] = s['theta'].reshape(B, -1)
@@ -65,7 +72,6 @@ class Model(nn.Module):
                 s['kp_2d'] = s['kp_2d'].reshape(B, -1, 2)
                 s['kp_3d'] = s['kp_3d'].reshape(B, -1, 3)
                 s['rotmat'] = s['rotmat'].reshape(B, -1, 3, 3)
-                s['scores'] = scores
 
         else:
             size = 16
@@ -75,6 +81,5 @@ class Model(nn.Module):
                 s['kp_2d'] = s['kp_2d'].reshape(B, size, -1, 2)
                 s['kp_3d'] = s['kp_3d'].reshape(B, size, -1, 3)
                 s['rotmat'] = s['rotmat'].reshape(B, size, -1, 3, 3)
-                s['scores'] = scores
 
-        return smpl_output
+        return smpl_output, None
