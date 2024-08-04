@@ -19,7 +19,7 @@ from lib.utils.slerp_filter_utils import quaternion_from_matrix, quaternion_sler
 from lib.utils.renderer import Renderer
 
 from lib.dataset._motion_dataset import read_pkl
-from lib.TextHMR.model_v3 import Model
+from lib.TextHMR.model_v4 import Model
 
 def get_sequence(start_index, end_index, seqlen=16):
     if end_index - start_index + 1 == seqlen:
@@ -167,6 +167,7 @@ if __name__ == "__main__":
             data_keyed[u_n]['shape'] = dataset_data['shape'][indexes][valids]
     dataset_data = data_keyed
 
+    from lib.dataset._dataset_motion_3d import coco2h36m
     """ Run evaluation """
     model.eval()
     with torch.no_grad():
@@ -198,19 +199,21 @@ if __name__ == "__main__":
                         seq_select = get_sequence(chunk_idxes[curr_idx+ii][0], chunk_idxes[curr_idx+ii][1])
                         if (seq_select[-1] - seq_select[0]) == (seqlen-1):
                             input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
-                            input_vitpose.append(curr_vitpose[None, seq_select, :]) # [1, 16, 17, 2]
+                            convert_joint = coco2h36m(curr_vitpose[seq_select, :])  # [16, J, 3]
+                            input_vitpose.append() # [1, 16, 17, 2]
                 else:
                     for ii in range(curr_idx, len(chunk_idxes)):
                         seq_select = get_sequence(chunk_idxes[ii][0], chunk_idxes[ii][1])
                         if (seq_select[-1] - seq_select[0]) == (seqlen-1):
                             input_feat.append(curr_feat[None, seq_select, :])
-                            input_vitpose.append(curr_vitpose[None, seq_select, :])
+                            input_vitpose.append(coco2h36m(curr_vitpose[None, seq_select, :]))
                 
                 if input_feat == [] and input_vitpose == []:
                     continue
 
                 input_feat = torch.cat(input_feat, dim=0)
                 input_vitpose = torch.cat(input_vitpose, dim=0)
+
                 preds, pose_3d = model(input_feat, input_vitpose, J_regressor=J_regressor, is_train=False)
 
                 n_kp = preds[-1]['kp_3d'].shape[-2]

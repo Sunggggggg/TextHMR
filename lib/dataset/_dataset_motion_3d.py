@@ -34,6 +34,11 @@ def coco2h36m(joint):
     '''
     joint : [T, J, 3]
     '''
+    convert_tensor = False
+    if isinstance(joint, torch.tensor):
+        convert_tensor = True
+        joint = joint.detach().cpu().numpy()
+
     new_joint = np.zeros_like(joint)
 
     new_joint[:, 0] = (joint[:, 11] + joint[:, 12]) / 2 # Hip
@@ -55,6 +60,9 @@ def coco2h36m(joint):
     new_joint[:, 16] = joint[:, 10]                       # Rhand
 
     new_joint[:, 7] = (new_joint[:, 0] + new_joint[:, 8])/2
+
+    if convert_tensor :
+        new_joint = torch.from_numpy(new_joint)
 
     return new_joint
 
@@ -189,14 +197,6 @@ class Dataset3D(Dataset):
                 nj =14
 
         kp_3d_tensor = np.zeros((self.seqlen, nj, 3), dtype=np.float16)
-        
-        # Lifter loss
-        if is_train:
-            coco_kp_3d_tensor = np.zeros((self.seqlen, 17, 3), dtype=np.float16)
-            coco_kp3d = convert_kps(self.get_sequence(start_index, end_index, self.db['joints3D']), src='spin', dst='coco')
-        else:
-            coco_kp_3d_tensor = np.zeros((self.seqlen, 19, 3), dtype=np.float16)
-            coco_kp3d = coco_kp_3d_tensor
 
         if self.dataset_name == '3dpw':
             pose = self.get_sequence(start_index, end_index, self.db['pose'])
@@ -227,8 +227,11 @@ class Dataset3D(Dataset):
         bbox = self.get_sequence(start_index, end_index, self.db['bbox'])
         input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
         
-        # ViTpose
+        ## ViTpose
         inp_vitpose = coco2h36m(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
+        # Normalization
+        inp_vitpose[..., :2] = crop_scale_2d(inp_vitpose[..., :2])
+        inp_vitpose[..., -1] = 1. # z=1
         inp_vitpose = torch.from_numpy(inp_vitpose).float()
         
         theta_tensor = np.zeros((self.seqlen, 85), dtype=np.float16)
@@ -255,9 +258,6 @@ class Dataset3D(Dataset):
             theta_tensor[idx] = theta
             kp_3d_tensor[idx] = kp_3d[idx]
 
-            # Lifter loss
-            coco_kp_3d_tensor[idx, :17] = coco_kp3d[idx, :17]
-            
         # (N-2)xnjx3
         # accel_gt = kp_3d_tensor[:-2] - 2 * kp_3d_tensor[1:-1] + kp_3d_tensor[2:]
         # accel_gt = np.linalg.norm(accel_gt, axis=2) # (N-2)xnj
@@ -266,7 +266,6 @@ class Dataset3D(Dataset):
         target = {
             'features': input,
             'vitpose_j2d': inp_vitpose,
-            'coco_kp_3d': torch.from_numpy(coco_kp_3d_tensor).float(),
             'theta': torch.from_numpy(theta_tensor).float(), # camera, pose and shape
             'kp_2d': torch.from_numpy(kp_2d_tensor).float(), # 2D keypoints transformed according to bbox cropping
             'kp_3d': torch.from_numpy(kp_3d_tensor).float(), # 3D keypoints
