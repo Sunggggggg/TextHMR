@@ -35,7 +35,7 @@ def coco2h36m(joint):
     joint : [T, J, 3]
     '''
     convert_tensor = False
-    if isinstance(joint, torch.tensor):
+    if isinstance(joint, torch.Tensor):
         convert_tensor = True
         joint = joint.detach().cpu().numpy()
 
