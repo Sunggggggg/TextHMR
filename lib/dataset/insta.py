@@ -26,6 +26,8 @@ from lib.data_utils._kp_utils import convert_kps
 from lib.data_utils._img_utils import normalize_2d_kp, split_into_chunks
 from lib.data_utils._moition_utils import crop_scale_2d
 
+from ._dataset_motion_3d import coco2h36m
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +68,12 @@ class Insta(Dataset):
             kp_2d_tensor = np.ones((self.seqlen, 49, 3), dtype=np.float16)
 
             input = torch.from_numpy(self.get_sequence(start_index, end_index, self.db['features'])).float()
-            inp_vitpose = crop_scale_2d(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d'])[..., :2])
+            
+            ## ViTpose
+            inp_vitpose = coco2h36m(self.get_sequence(start_index, end_index, self.db['vitpose_joint2d']))   # [T, J, 3]
+            # Normalization
+            inp_vitpose[..., :2] = crop_scale_2d(inp_vitpose[..., :2])
+            inp_vitpose[..., -1] = 1. # z=1
             inp_vitpose = torch.from_numpy(inp_vitpose).float()
 
             vid_name = self.get_sequence(start_index, end_index, self.db['vid_name'])
