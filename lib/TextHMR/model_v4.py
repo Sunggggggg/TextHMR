@@ -53,7 +53,7 @@ class Model(nn.Module):
 
         feat = torch.cat([img_feat, pose_feat], dim=-1)                 # [B, T, 512+2176]
         feat = self.proj_dec(feat)
-        feat = self.temp_decoder(feat)                  # [B, T, 256]
+        feat = self.temp_decoder(feat)                                  # [B, T, 256]
 
         if is_train:
             global_feat = feat
