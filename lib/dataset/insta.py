@@ -36,7 +36,7 @@ class Insta(Dataset):
         self.seqlen = seqlen
         self.mid_frame = int(seqlen / 2)
         self.stride = int(seqlen * (1 - overlap) + 0.5)
-        self.h5_file = osp.join(GLoT_DB_DIR, 'insta_train_db_vitpose_new_clip.h5')
+        self.h5_file = osp.join(GLoT_DB_DIR, 'insta_train_db_vitpose.h5')
 
         with h5py.File(self.h5_file, 'r') as db:
             self.db = db
