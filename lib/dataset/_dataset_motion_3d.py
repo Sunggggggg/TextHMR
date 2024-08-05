@@ -37,6 +37,7 @@ def coco2h36m(joint):
     convert_tensor = False
     if isinstance(joint, torch.Tensor):
         convert_tensor = True
+        device = joint.device
         joint = joint.detach().cpu().numpy()
 
     new_joint = np.zeros_like(joint)
@@ -62,7 +63,7 @@ def coco2h36m(joint):
     new_joint[:, 7] = (new_joint[:, 0] + new_joint[:, 8])/2
 
     if convert_tensor :
-        new_joint = torch.from_numpy(new_joint)
+        new_joint = torch.from_numpy(new_joint).to(device)
 
     return new_joint
 
