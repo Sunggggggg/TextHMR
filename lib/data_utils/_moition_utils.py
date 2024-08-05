@@ -5,10 +5,10 @@ import torch
 
 def crop_scale_2d(motion, scale_range=[1, 1]):
     convert_tensor = False
-    if isinstance(joint, torch.Tensor):
+    if isinstance(motion, torch.Tensor):
         convert_tensor = True
-        device = joint.device
-        joint = joint.detach().cpu().numpy()
+        device = motion.device
+        motion = motion.detach().cpu().numpy()
     
     result = copy.deepcopy(motion)
     xmin = np.min(motion[...,0])
@@ -25,7 +25,7 @@ def crop_scale_2d(motion, scale_range=[1, 1]):
     result = (result - 0.5) * 2
 
     if convert_tensor :
-        new_joint = torch.from_numpy(new_joint).to(device)
+        result = torch.from_numpy(result).to(device)
 
     return result
 
