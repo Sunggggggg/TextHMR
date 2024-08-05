@@ -175,6 +175,10 @@ if __name__ == "__main__":
         for seq_name in pbar:
             curr_feats = dataset_data[seq_name]['features']         # 
             curr_vitposes = dataset_data[seq_name]['vitpose_j2d']   # [T, J, 3]
+            curr_j3ds = dataset_data[seq_name]['joints3D']          # [T, 14, 3]
+            dummy_cam = np.repeat(np.array([[1., 0., 0.]]), len(curr_j3ds), axis=0)
+            curr_theta = np.concatenate([dummy_cam, dataset_data[seq_name]['pose'], dataset_data[seq_name]['shape']], axis=1).astype(np.float32)
+        
             # Joint processing
             curr_vitposes = coco2h36m(curr_vitposes)
 
@@ -190,58 +194,82 @@ if __name__ == "__main__":
                 continue
 
             pred_j3ds, pred_verts, pred_rotmats, pred_thetas, scores = [], [], [], [], []
+            target_j3ds, target_theta = [], []
             for curr_idx in range(0, len(chunk_idxes), 8):
                 input_feat = []
                 input_vitpose = []
-                input_text = []
+                output_joint = []
+                output_theta = []
 
                 if (curr_idx + 8) < len(chunk_idxes):
                     for ii in range(8):
                         seq_select = get_sequence(chunk_idxes[curr_idx+ii][0], chunk_idxes[curr_idx+ii][1])
                         if (seq_select[-1] - seq_select[0]) == (seqlen-1):
+                            # Feature
                             input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
 
-                            curr_joint = curr_vitpose[seq_select]                # [T, J, 3]
+                            # Vitpose
+                            curr_joint = curr_vitpose[seq_select]                   # [T, J, 3]
                             curr_joint[..., :2] = crop_scale_2d(curr_joint[..., :2])
                             curr_joint[..., -1] = 1.
                             input_vitpose.append(curr_joint[None])
+
+                            # Seq_select
+                            mid_frame_idx = seq_select[0] + seqlen//2
+                            output_joint.append(curr_j3ds[mid_frame_idx:mid_frame_idx+1, :, :])  # [1, 14, 3]
+                            output_theta.append(curr_theta[mid_frame_idx:mid_frame_idx+1, :])    # [1, 85]
+                            print(mid_frame_idx)
                 else:
                     for ii in range(curr_idx, len(chunk_idxes)):
                         seq_select = get_sequence(chunk_idxes[ii][0], chunk_idxes[ii][1])
                         if (seq_select[-1] - seq_select[0]) == (seqlen-1):
+                            # Feature
                             input_feat.append(curr_feat[None, seq_select, :])       # [1, 16, 2048]
 
-                            curr_joint = curr_vitpose[seq_select]                # [T, J, 3]
+                            # Vitpose
+                            curr_joint = curr_vitpose[seq_select]                   # [T, J, 3]
                             curr_joint[..., :2] = crop_scale_2d(curr_joint[..., :2])
                             curr_joint[..., -1] = 1.
                             input_vitpose.append(curr_joint[None])
+
+                            # Seq_select
+                            mid_frame_idx = seq_select[0] + seqlen//2
+                            output_joint.append(curr_j3ds[mid_frame_idx:mid_frame_idx+1, :, :])  # [1, 14, 3]
+                            output_theta.append(curr_theta[mid_frame_idx:mid_frame_idx+1, :])    # [1, 85]
                 
                 if input_feat == [] and input_vitpose == []:
                     continue
 
-                input_feat = torch.cat(input_feat, dim=0)
-                input_vitpose = torch.cat(input_vitpose, dim=0)
+                input_feat = torch.cat(input_feat, dim=0)       # [8, 64, 2048]
+                input_vitpose = torch.cat(input_vitpose, dim=0) # [8, 64, 17, 3]
 
                 preds, pose_3d = model(input_feat, input_vitpose, J_regressor=J_regressor, is_train=False)
 
+                # Pred
                 n_kp = preds[-1]['kp_3d'].shape[-2]
-                pred_j3d = preds[-1]['kp_3d'].view(-1, n_kp, 3).cpu().numpy()
-                pred_vert = preds[-1]['verts'].view(-1, 6890, 3).cpu().numpy()
-                pred_rotmat = preds[-1]['rotmat'].view(-1,24,3,3).cpu().numpy()
-                pred_theta = preds[-1]['theta'].view(-1,85).cpu().numpy()
+                pred_j3d = preds[-1]['kp_3d'].view(-1, n_kp, 3).cpu().numpy()       # [8, 14, 3]
+                pred_vert = preds[-1]['verts'].view(-1, 6890, 3).cpu().numpy()      # [8, 6890, 3]
+                pred_rotmat = preds[-1]['rotmat'].view(-1,24,3,3).cpu().numpy()     # [8, 24, 3, 3]
+                pred_theta = preds[-1]['theta'].view(-1,85).cpu().numpy()           # [8, 85]
 
                 pred_j3ds.append(pred_j3d)
                 pred_verts.append(pred_vert)
                 pred_rotmats.append(pred_rotmat)
                 pred_thetas.append(pred_theta)
 
-            pred_j3ds = np.vstack(pred_j3ds)
-            target_j3ds = dataset_data[seq_name]['joints3D']
-            pred_verts = np.vstack(pred_verts)
-            dummy_cam = np.repeat(np.array([[1., 0., 0.]]), len(target_j3ds), axis=0)
-            target_theta = np.concatenate([dummy_cam, dataset_data[seq_name]['pose'], dataset_data[seq_name]['shape']], axis=1).astype(np.float32)
-            target_j3ds, target_theta = target_j3ds[:len(pred_j3ds)], target_theta[:len(pred_j3ds)]
+                # GT
+                output_joint = np.concatenate(output_joint, axis=0)                 # [8, 14, 3]
+                output_theta = np.concatenate(output_theta, axis=0)                 # [8, 85]
 
+                target_j3ds.append(output_joint)
+                target_theta.append(output_theta)
+
+            pred_j3ds = np.vstack(pred_j3ds)        # [N, 14, 3] N=834
+            pred_verts = np.vstack(pred_verts)      # [N, 6890, 3]
+            
+            target_j3ds = np.vstack(target_j3ds)        # [N, 14, 3] N=834
+            target_theta = np.vstack(target_theta)      # [N, 85]
+            
             if 'mpii3d' in data_path:
                 target_j3ds = convert_kps(target_j3ds, src='spin', dst='mpii3d_test')
                 pred_j3ds = convert_kps(pred_j3ds, src='spin', dst='mpii3d_test')
