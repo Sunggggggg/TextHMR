@@ -1,8 +1,14 @@
 import pickle
 import copy
 import numpy as np
+import torch
 
 def crop_scale_2d(motion, scale_range=[1, 1]):
+    convert_tensor = False
+    if isinstance(joint, torch.Tensor):
+        convert_tensor = True
+        device = joint.device
+        joint = joint.detach().cpu().numpy()
     
     result = copy.deepcopy(motion)
     xmin = np.min(motion[...,0])
@@ -17,6 +23,10 @@ def crop_scale_2d(motion, scale_range=[1, 1]):
     ys = (ymin+ymax-scale) / 2
     result[...,:2] = (motion[..., :2]- [xs,ys]) / scale
     result = (result - 0.5) * 2
+
+    if convert_tensor :
+        new_joint = torch.from_numpy(new_joint).to(device)
+
     return result
 
 def crop_scale_3d(motion, scale_range=[1, 1]):
